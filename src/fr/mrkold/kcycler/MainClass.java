@@ -131,69 +131,71 @@ public class MainClass extends JavaPlugin implements Listener {
 		Player p = event.getPlayer();
 		Block b = event.getClickedBlock();
 		if (b != null){
-			if(getWorldGuard().canBuild(p, b)||p.hasPermission("kcycler.admin")){
-				Byte md = event.getClickedBlock().getData();
-				List<Integer> blacklist = getConfig().getIntegerList("cycler-blacklist");
-				if(p.isSneaking()){
-					if(event.getAction() == Action.LEFT_CLICK_BLOCK) {
-						if(event.getPlayer().getItemInHand().getType() == biomeTool){
-							bcycler.copyBiome(p, b);
-							event.setCancelled(true);
+			if(p.hasPermission("kcycler.use")){
+				if(getWorldGuard().canBuild(p, b)||p.hasPermission("kcycler.admin")){
+					Byte md = event.getClickedBlock().getData();
+					List<Integer> blacklist = getConfig().getIntegerList("cycler-blacklist");
+					if(p.isSneaking()){
+						if(event.getAction() == Action.LEFT_CLICK_BLOCK) {
+							if(event.getPlayer().getItemInHand().getType() == biomeTool){
+								bcycler.copyBiome(p, b);
+								event.setCancelled(true);
+							}
+							if(event.getPlayer().getItemInHand().getType() == metaTool){
+								mcycler.copyMeta(p, b);
+					        	event.setCancelled(true);
+							}
 						}
-						if(event.getPlayer().getItemInHand().getType() == metaTool){
-							mcycler.copyMeta(p, b);
-				        	event.setCancelled(true);
+						if(event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+							if(event.getPlayer().getItemInHand().getType() == biomeTool){
+								bcycler.pasteBiome(p, b);
+								event.setCancelled(true);
+							}
+							if(event.getPlayer().getItemInHand().getType() == metaTool){
+								mcycler.pasteMeta(p, b);
+								event.setCancelled(true);
+							}
 						}
 					}
-					if(event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-						if(event.getPlayer().getItemInHand().getType() == biomeTool){
-							bcycler.pasteBiome(p, b);
-							event.setCancelled(true);
+					else{
+						if(event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+							if(event.getPlayer().getItemInHand().getType() == biomeTool){
+								bcycler.rightClickBlock(p, b);
+								event.setCancelled(true);
+							}
+							if(event.getPlayer().getItemInHand().getType() == metaTool){
+								if(blacklist.contains(b.getTypeId())||b.getTypeId() == 175){
+									p.sendMessage(ChatColor.RED + "Action impossible");
+									event.setCancelled(true);
+								}
+								else{
+									MetaCycler.rightClickBlock(p, b, md);
+									event.setCancelled(true);
+								}
+							}
 						}
-						if(event.getPlayer().getItemInHand().getType() == metaTool){
-							mcycler.pasteMeta(p, b);
-							event.setCancelled(true);
+						if(event.getAction() == Action.LEFT_CLICK_BLOCK) {
+							if(event.getPlayer().getItemInHand().getType() == biomeTool){
+								bcycler.leftClickBlock(p, b);
+								event.setCancelled(true);
+							}
+							if(event.getPlayer().getItemInHand().getType() == metaTool){
+								if(blacklist.contains(b.getTypeId())||b.getTypeId() == 175){
+									p.sendMessage(ChatColor.RED + "Action impossible");
+									event.setCancelled(true);
+								}
+								else{
+									MetaCycler.leftClickBlock(p, b, md);
+									event.setCancelled(true);
+								}
+							}
 						}
 					}
 				}
 				else{
-					if(event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-						if(event.getPlayer().getItemInHand().getType() == biomeTool){
-							bcycler.rightClickBlock(p, b);
-							event.setCancelled(true);
-						}
-						if(event.getPlayer().getItemInHand().getType() == metaTool){
-							if(blacklist.contains(b.getTypeId())||b.getTypeId() == 175){
-								p.sendMessage(ChatColor.RED + "Action impossible");
-								event.setCancelled(true);
-							}
-							else{
-								MetaCycler.rightClickBlock(p, b, md);
-								event.setCancelled(true);
-							}
-						}
-					}
-					if(event.getAction() == Action.LEFT_CLICK_BLOCK) {
-						if(event.getPlayer().getItemInHand().getType() == biomeTool){
-							bcycler.leftClickBlock(p, b);
-							event.setCancelled(true);
-						}
-						if(event.getPlayer().getItemInHand().getType() == metaTool){
-							if(blacklist.contains(b.getTypeId())||b.getTypeId() == 175){
-								p.sendMessage(ChatColor.RED + "Action impossible");
-								event.setCancelled(true);
-							}
-							else{
-								MetaCycler.leftClickBlock(p, b, md);
-								event.setCancelled(true);
-							}
-						}
-					}
+					p.sendMessage(ChatColor.RED +  "Vous n'avez pas l'autorisation d'effectuer cette action ici");
 				}
 			}
-			else{
-				p.sendMessage(ChatColor.RED +  "Vous n'avez pas l'autorisation d'effectuer cette action ici");
-			}			
 		}
 	}
 	

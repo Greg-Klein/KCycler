@@ -23,11 +23,13 @@ public class KCCommands implements CommandExecutor {
 			Player p = (Player) sender;
 			
 			if(label.equalsIgnoreCase("mt")) {
-			    p.getInventory().addItem(new ItemStack(plugin.metaTool, 1));
+			    //p.getInventory().addItem(new ItemStack(plugin.metaTool, 1));
+				p.setItemInHand(new ItemStack(plugin.metaTool, 1));
 			    p.playSound(p.getLocation(), Sound.ORB_PICKUP, 1, 1);
 			}
 			if(label.equalsIgnoreCase("bt")) {
-			    p.getInventory().addItem(new ItemStack(plugin.biomeTool, 1));
+			    //p.getInventory().addItem(new ItemStack(plugin.biomeTool, 1));
+				p.setItemInHand(new ItemStack(plugin.biomeTool, 1));
 			    p.playSound(p.getLocation(), Sound.ORB_PICKUP, 1, 1);
 			}
 			if(label.equalsIgnoreCase("ph")) {
@@ -41,7 +43,9 @@ public class KCCommands implements CommandExecutor {
 			    	SkullMeta meta = (SkullMeta) skull.getItemMeta();
 			    	meta.setOwner(a0);
 			    	skull.setItemMeta(meta);
-			    	p.getInventory().addItem(skull);
+			    	//p.getInventory().addItem(skull);
+			    	p.setItemInHand(skull);
+			    	
 				   	p.playSound(p.getLocation(), Sound.ORB_PICKUP, 1, 1);
 			    }
 			}
