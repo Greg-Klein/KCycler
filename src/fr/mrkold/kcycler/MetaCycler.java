@@ -3,7 +3,9 @@ package fr.mrkold.kcycler;
 import java.io.IOException;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Chunk;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -18,8 +20,9 @@ public class MetaCycler {
 	
 	
 	@SuppressWarnings("deprecation")
-	static void leftClickBlock(Player player, Block b, Byte md){
+	public static void leftClickBlock(Player player, Block b, Byte md){
     	b.setData((byte) (md - 1));
+    	refreshChunk(b);
     	Block block = player.getTargetBlock(null, 5);
 		ItemMeta im = player.getItemInHand().getItemMeta();
 		im.setDisplayName(ChatColor.GREEN + "" + block.getTypeId() + ":" + block.getData());
@@ -27,8 +30,9 @@ public class MetaCycler {
 	}
 	
 	@SuppressWarnings("deprecation")
-	static void rightClickBlock(Player player, Block b, Byte md){
+	public static void rightClickBlock(Player player, Block b, Byte md){
     	b.setData((byte) (md + 1));
+    	refreshChunk(b);
     	Block block = player.getTargetBlock(null, 5);
 		ItemMeta im = player.getItemInHand().getItemMeta();
 		im.setDisplayName(ChatColor.GREEN + "" + block.getTypeId() + ":" + block.getData());
@@ -62,6 +66,7 @@ public class MetaCycler {
         	Material mat = Material.getMaterial(matint);
         	b.setType(mat);
         	b.setData(md);
+        	refreshChunk(b);
     	}
     }
     
@@ -74,4 +79,10 @@ public class MetaCycler {
 			e.printStackTrace();
 		}
 	}
+    
+    static void refreshChunk(Block b){
+    	World w = b.getWorld();
+        Chunk c = b.getChunk();
+        w.refreshChunk(c.getX(), c.getZ());
+    }
 }
