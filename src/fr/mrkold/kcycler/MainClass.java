@@ -233,7 +233,7 @@ public class MainClass extends JavaPlugin implements Listener {
 		public void onInteract(PlayerInteractEvent event) {
 			
 		    if(event.getAction() == Action.PHYSICAL) {
-		        if((event.getClickedBlock().getType() == Material.STONE_PLATE)||(event.getClickedBlock().getType() == Material.WOOD_PLATE)) {
+		        if((event.getClickedBlock().getType() == Material.STONE_PLATE)||(event.getClickedBlock().getType() == Material.WOOD_PLATE)||(event.getClickedBlock().getType() == Material.GOLD_PLATE)||(event.getClickedBlock().getType() == Material.IRON_PLATE)) {
 		        	byte metadata = event.getClickedBlock().getData();
 		        	// Si la metadata est différente de 0 on annule l'action
 		        	if(metadata != 0){

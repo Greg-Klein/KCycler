@@ -27,7 +27,7 @@ public class BiomeCycler {
     public Biome getNextBiome(Biome b)
     {
         int i = biomes.indexOf(b) + 1;
-        if (i > maxBiome)
+        if (i >= maxBiome)
         {
             i = 0;
         }
@@ -37,7 +37,7 @@ public class BiomeCycler {
     public Biome getPreviousBiome(Biome b)
     {
         int i = biomes.indexOf(b) - 1;
-        if (i < 0)
+        if (i <= 0)
         {
             i = maxBiome;
         }
