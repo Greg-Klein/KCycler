@@ -10,6 +10,8 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Painting;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,6 +21,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.painting.PaintingBreakByEntityEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
@@ -217,14 +220,24 @@ public class MainClass extends JavaPlugin implements Listener {
 		}
 	}
 	
-	//Paint Cycler
+	// Paint Cycler
 	@EventHandler
-	public void paintingChange(PaintingBreakByEntityEvent event) {
-		Painting painting = event.getPainting();
-		Player p = (Player) event.getRemover();
+	public void rClickPainting (PlayerInteractEntityEvent e){
+		Player p = (Player) e.getPlayer();
+		Entity ent = e.getRightClicked();
+		if(ent.getType() == EntityType.PAINTING){
+			if(p.getItemInHand().getType() == metaTool){
+				pcycler.rClick(ent);
+			}
+		}
+	}
+	@EventHandler
+	public void lClickPainting(PaintingBreakByEntityEvent e){
+		Player p = (Player) e.getRemover();
+		Painting painting = e.getPainting();
 		if(p.getItemInHand().getType() == metaTool){
-			painting.setArt(pcycler.getNextArt(painting.getArt()));
-			event.setCancelled(true);
+	        pcycler.lClick(painting);
+	        e.setCancelled(true);
 		}
 	}
 	
