@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -20,6 +21,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.inventory.InventoryCreativeEvent;
 import org.bukkit.event.painting.PaintingBreakByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -225,9 +228,14 @@ public class MainClass extends JavaPlugin implements Listener {
 	public void rClickPainting (PlayerInteractEntityEvent e){
 		Player p = (Player) e.getPlayer();
 		Entity ent = e.getRightClicked();
-		if(ent.getType() == EntityType.PAINTING){
-			if(p.getItemInHand().getType() == metaTool){
-				pcycler.rClick(ent);
+		Location loc = ent.getLocation();
+		if(p.hasPermission("kcycler.use")){
+			if(getWorldGuard().canBuild(p, loc)||p.hasPermission("kcycler.admin")){
+				if(ent.getType() == EntityType.PAINTING){
+					if(p.getItemInHand().getType() == metaTool){
+						pcycler.rClick(ent);
+					}
+				}
 			}
 		}
 	}
@@ -235,24 +243,62 @@ public class MainClass extends JavaPlugin implements Listener {
 	public void lClickPainting(PaintingBreakByEntityEvent e){
 		Player p = (Player) e.getRemover();
 		Painting painting = e.getPainting();
-		if(p.getItemInHand().getType() == metaTool){
-	        pcycler.lClick(painting);
-	        e.setCancelled(true);
+		Location loc = painting.getLocation();
+		if(p.hasPermission("kcycler.use")){
+			if(getWorldGuard().canBuild(p, loc)||p.hasPermission("kcycler.admin")){
+				if(p.getItemInHand().getType() == metaTool){
+			        pcycler.lClick(painting);
+			        e.setCancelled(true);
+				}
+			}
 		}
 	}
 	
-	// Si l'on marche sur une plaque de pression en stone ou wood
-		@EventHandler(priority = EventPriority.HIGH)
-		public void onInteract(PlayerInteractEvent event) {
-			
-		    if(event.getAction() == Action.PHYSICAL) {
-		        if((event.getClickedBlock().getType() == Material.STONE_PLATE)||(event.getClickedBlock().getType() == Material.WOOD_PLATE)||(event.getClickedBlock().getType() == Material.GOLD_PLATE)||(event.getClickedBlock().getType() == Material.IRON_PLATE)) {
-		        	byte metadata = event.getClickedBlock().getData();
-		        	// Si la metadata est différente de 0 on annule l'action
-		        	if(metadata != 0){
-		        		event.setCancelled(true);
-		        	}
-		        }
-		    }
+	// Si l'on marche sur une plaque de pression
+	@EventHandler(priority = EventPriority.HIGH)
+	public void onInteract(PlayerInteractEvent event) {
+		
+	    if(event.getAction() == Action.PHYSICAL) {
+	        if((event.getClickedBlock().getType() == Material.STONE_PLATE)||(event.getClickedBlock().getType() == Material.WOOD_PLATE)||(event.getClickedBlock().getType() == Material.GOLD_PLATE)||(event.getClickedBlock().getType() == Material.IRON_PLATE)) {
+	        	byte metadata = event.getClickedBlock().getData();
+	        	// Si la metadata est différente de 0 on annule l'action
+	        	if(metadata != 0){
+	        		event.setCancelled(true);
+	        	}
+	        }
+	    }
+	}
+	
+	// Block pick avec metadata
+	@EventHandler
+	public void onPick(InventoryCreativeEvent e){
+		Player p = (Player) e.getInventory().getHolder();
+		if(p.isSneaking()){
+			byte metadata = p.getTargetBlock(null, 5).getData();
+			Material mat = e.getCursor().getType();
+			ItemStack item = new ItemStack(mat, 1);
+			ItemMeta im = item.getItemMeta();
+			im.setDisplayName(ChatColor.GREEN + "" + mat.getId() + ":" + metadata);
+			item.setItemMeta(im);
+			e.setCursor(item);
 		}
+	}
+	
+	@EventHandler
+	public void onBlockPlace(BlockPlaceEvent e){
+		Player p = e.getPlayer();
+		ItemStack item = p.getItemInHand();
+		ItemMeta im = item.getItemMeta();
+		String name = im.getDisplayName();
+		try{
+			String[] tab = name.split(":");
+			int mdint = Integer.parseInt(tab[1]);
+			byte md = (byte) mdint;
+			e.getBlockPlaced().setData(md);
+		}
+		catch(NullPointerException npe){
+			//npe.printStackTrace();
+		}
+	}
+    
 }

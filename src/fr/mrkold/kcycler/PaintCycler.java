@@ -16,7 +16,7 @@ public class PaintCycler {
 		Painting painting = (Painting) ent;
         int paintingID = painting.getArt().getId();
         int pID = ++paintingID;
-        if(pID == 21){
+        if(pID >= 26){
         	pID = 0;
         }
         painting.setArt(Art.getById(pID));
@@ -26,8 +26,8 @@ public class PaintCycler {
 	public void lClick(Painting painting){
 		int paintingID = painting.getArt().getId();
 		 int pID = --paintingID;
-	        if(pID < 0){
-	        	pID = 20;
+	        if(pID <= -1){
+	        	pID = 25;
 	        }
         painting.setArt(Art.getById(pID));
 	}

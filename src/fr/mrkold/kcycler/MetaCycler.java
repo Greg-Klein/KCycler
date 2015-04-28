@@ -74,8 +74,6 @@ public class MetaCycler {
 		try {
 			plugin.data.save(plugin.myFile);
 		} catch (IOException e) {
-			// catch block
-			plugin.getLogger().info("DEBUG");
 			e.printStackTrace();
 		}
 	}
