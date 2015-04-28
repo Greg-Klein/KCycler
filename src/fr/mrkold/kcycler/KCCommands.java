@@ -1,5 +1,7 @@
 package fr.mrkold.kcycler;
 
+import java.io.IOException;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
@@ -23,12 +25,10 @@ public class KCCommands implements CommandExecutor {
 			Player p = (Player) sender;
 			
 			if(label.equalsIgnoreCase("mt")) {
-			    //p.getInventory().addItem(new ItemStack(plugin.metaTool, 1));
 				p.setItemInHand(new ItemStack(plugin.metaTool, 1));
 			    p.playSound(p.getLocation(), Sound.ORB_PICKUP, 1, 1);
 			}
 			if(label.equalsIgnoreCase("bt")) {
-			    //p.getInventory().addItem(new ItemStack(plugin.biomeTool, 1));
 				p.setItemInHand(new ItemStack(plugin.biomeTool, 1));
 			    p.playSound(p.getLocation(), Sound.ORB_PICKUP, 1, 1);
 			}
@@ -42,15 +42,36 @@ public class KCCommands implements CommandExecutor {
 			    	ItemStack skull = new ItemStack(397, 1, (short) 3);
 			    	SkullMeta meta = (SkullMeta) skull.getItemMeta();
 			    	meta.setOwner(a0);
-			    	skull.setItemMeta(meta);
-			    	//p.getInventory().addItem(skull);
+			    	skull.setItemMeta(meta);;
 			    	p.setItemInHand(skull);
 			    	
 				   	p.playSound(p.getLocation(), Sound.ORB_PICKUP, 1, 1);
 			    }
 			}
+			if(label.equalsIgnoreCase("pick")) {
+				String player = p.getName();
+				boolean pickup = plugin.data.getBoolean(player +".pickup");
+				if(pickup){
+					plugin.data.set(player +".pickup", false);
+					saveData();
+					p.sendMessage(ChatColor.GREEN + "Metadata Pick disabled");
+				}
+				else{
+					plugin.data.set(player +".pickup", true);
+					saveData();
+					p.sendMessage(ChatColor.GREEN + "Metadata Pick enabled");
+				}
+			}
 		}	
 		return false;
+	}
+	
+	public void saveData() {
+		try {
+			plugin.data.save(plugin.myFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

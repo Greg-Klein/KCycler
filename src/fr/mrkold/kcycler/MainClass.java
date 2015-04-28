@@ -50,6 +50,7 @@ public class MainClass extends JavaPlugin implements Listener {
 	public File myFile;
     public FileConfiguration data = YamlConfiguration.loadConfiguration(dataFile);
     
+    
     private BiomeCycler bcycler;
     private MetaCycler mcycler;
     private PaintCycler pcycler;
@@ -68,9 +69,17 @@ public class MainClass extends JavaPlugin implements Listener {
 	@Override
 	public void onEnable(){
 		
+		try {
+	        Metrics metrics = new Metrics(this);
+	        metrics.start();
+	    } catch (IOException e) {
+	        // Failed to submit the stats :-(
+	    }
+		
 		getCommand("bt").setExecutor(new KCCommands(this));
 		getCommand("mt").setExecutor(new KCCommands(this));
 		getCommand("ph").setExecutor(new KCCommands(this));
+		getCommand("pick").setExecutor(new KCCommands(this));
 		
 		bcycler = new BiomeCycler(this);
 		mcycler = new MetaCycler(this);
@@ -273,7 +282,11 @@ public class MainClass extends JavaPlugin implements Listener {
 	@EventHandler
 	public void onPick(InventoryCreativeEvent e){
 		Player p = (Player) e.getInventory().getHolder();
-		if(p.isSneaking()){
+		Block b = p.getTargetBlock(null, 5);
+		String player = p.getName();
+		boolean pickup = data.getBoolean(player +".pickup");
+		List<Integer> puBl = getConfig().getIntegerList("pick-blacklist");
+		if(p.isSneaking() && pickup && !puBl.contains(b.getTypeId())){
 			byte metadata = p.getTargetBlock(null, 5).getData();
 			Material mat = e.getCursor().getType();
 			ItemStack item = new ItemStack(mat, 1);
@@ -287,17 +300,21 @@ public class MainClass extends JavaPlugin implements Listener {
 	@EventHandler
 	public void onBlockPlace(BlockPlaceEvent e){
 		Player p = e.getPlayer();
-		ItemStack item = p.getItemInHand();
-		ItemMeta im = item.getItemMeta();
-		String name = im.getDisplayName();
-		try{
-			String[] tab = name.split(":");
-			int mdint = Integer.parseInt(tab[1]);
-			byte md = (byte) mdint;
-			e.getBlockPlaced().setData(md);
-		}
-		catch(NullPointerException npe){
-			//npe.printStackTrace();
+		String player = p.getName();
+		boolean pickup = data.getBoolean(player +".pickup");
+		if(pickup){
+			ItemStack item = p.getItemInHand();
+			ItemMeta im = item.getItemMeta();
+			String name = im.getDisplayName();
+			try{
+				String[] tab = name.split(":");
+				int mdint = Integer.parseInt(tab[1]);
+				byte md = (byte) mdint;
+				e.getBlockPlaced().setData(md);
+			}
+			catch(NullPointerException npe){
+				//npe.printStackTrace();
+			}
 		}
 	}
     

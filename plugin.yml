@@ -11,3 +11,4 @@ commands:
       description: Give BiomeTool
     ph:
       description: /ph <playername> give <playername>'s head
+    pick:
