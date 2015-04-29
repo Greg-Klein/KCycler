@@ -26,6 +26,7 @@ import org.bukkit.event.inventory.InventoryCreativeEvent;
 import org.bukkit.event.painting.PaintingBreakByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -110,6 +111,15 @@ public class MainClass extends JavaPlugin implements Listener {
 	@Override
 	public void onDisable(){
 		getLogger().info(pdf.getName() + " v"+ pdf.getVersion() + " disabled");
+	}
+	
+	// A la connection
+	@EventHandler
+	public void onJoin(PlayerJoinEvent e){
+		String udmsg = UpdateChecker.checkVersion(pdf);
+		if(!udmsg.equalsIgnoreCase("")){
+			e.getPlayer().sendMessage(udmsg);
+		}
 	}
 	
 	
