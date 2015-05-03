@@ -48,20 +48,6 @@ public class KCCommands implements CommandExecutor {
 				   	p.playSound(p.getLocation(), Sound.ORB_PICKUP, 1, 1);
 			    }
 			}
-			if(label.equalsIgnoreCase("pick")) {
-				String player = p.getName();
-				boolean pickup = plugin.data.getBoolean(player +".pickup");
-				if(pickup){
-					plugin.data.set(player +".pickup", false);
-					saveData();
-					p.sendMessage(ChatColor.GREEN + "Metadata Pick disabled");
-				}
-				else{
-					plugin.data.set(player +".pickup", true);
-					saveData();
-					p.sendMessage(ChatColor.GREEN + "Metadata Pick enabled");
-				}
-			}
 		}	
 		return false;
 	}

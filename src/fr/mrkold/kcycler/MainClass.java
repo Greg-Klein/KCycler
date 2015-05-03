@@ -293,10 +293,8 @@ public class MainClass extends JavaPlugin implements Listener {
 	public void onPick(InventoryCreativeEvent e){
 		Player p = (Player) e.getInventory().getHolder();
 		Block b = p.getTargetBlock(null, 5);
-		String player = p.getName();
-		boolean pickup = data.getBoolean(player +".pickup");
 		List<Integer> puBl = getConfig().getIntegerList("pick-blacklist");
-		if(p.isSneaking() && pickup && !puBl.contains(b.getTypeId())){
+		if(p.isSneaking() && !puBl.contains(b.getTypeId())){
 			byte metadata = p.getTargetBlock(null, 5).getData();
 			Material mat = e.getCursor().getType();
 			ItemStack item = new ItemStack(mat, 1);
@@ -310,21 +308,17 @@ public class MainClass extends JavaPlugin implements Listener {
 	@EventHandler
 	public void onBlockPlace(BlockPlaceEvent e){
 		Player p = e.getPlayer();
-		String player = p.getName();
-		boolean pickup = data.getBoolean(player +".pickup");
-		if(pickup){
-			ItemStack item = p.getItemInHand();
-			ItemMeta im = item.getItemMeta();
-			String name = im.getDisplayName();
-			try{
-				String[] tab = name.split(":");
-				int mdint = Integer.parseInt(tab[1]);
-				byte md = (byte) mdint;
-				e.getBlockPlaced().setData(md);
-			}
-			catch(NullPointerException npe){
-				//npe.printStackTrace();
-			}
+		ItemStack item = p.getItemInHand();
+		ItemMeta im = item.getItemMeta();
+		String name = im.getDisplayName();
+		try{
+			String[] tab = name.split(":");
+			int mdint = Integer.parseInt(tab[1]);
+			byte md = (byte) mdint;
+			e.getBlockPlaced().setData(md);
+		}
+		catch(NullPointerException npe){
+			//npe.printStackTrace();
 		}
 	}
     
