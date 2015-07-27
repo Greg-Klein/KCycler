@@ -2,6 +2,7 @@ package fr.mrkold.kcycler;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import org.bukkit.Bukkit;
@@ -59,9 +60,9 @@ public class MainClass extends JavaPlugin implements Listener {
 	private WorldGuardPlugin getWorldGuard() {
 	    Plugin plugin = getServer().getPluginManager().getPlugin("WorldGuard");
 	 
-	    // WorldGuard may not be loaded
+	    // WorldGuard
 	    if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
-	        return null; // Maybe you want throw an exception instead
+	        return null;
 	    }
 	 
 	    return (WorldGuardPlugin) plugin;
@@ -80,7 +81,6 @@ public class MainClass extends JavaPlugin implements Listener {
 		getCommand("bt").setExecutor(new KCCommands(this));
 		getCommand("mt").setExecutor(new KCCommands(this));
 		getCommand("ph").setExecutor(new KCCommands(this));
-		getCommand("pick").setExecutor(new KCCommands(this));
 		
 		bcycler = new BiomeCycler(this);
 		mcycler = new MetaCycler(this);
@@ -116,21 +116,14 @@ public class MainClass extends JavaPlugin implements Listener {
 	// A la connection
 	@EventHandler
 	public void onJoin(PlayerJoinEvent e){
-		String udmsg = UpdateChecker.checkVersion(pdf);
-		if(!udmsg.equalsIgnoreCase("")){
-			e.getPlayer().sendMessage(udmsg);
+		if(e.getPlayer().isOp()){
+			String udmsg = UpdateChecker.checkVersion(pdf);
+			if(!udmsg.equalsIgnoreCase("")){
+				e.getPlayer().sendMessage(udmsg);
+			}
 		}
 	}
 	
-	
-	//-------------------------------------------------------
-	// Empêche l'oeuf de dragon de se téléporter
-	@EventHandler(priority = EventPriority.HIGH)
-	public void onEggTP(BlockFromToEvent event) {
-		if((event.getBlock().getType()) == Material.DRAGON_EGG){
-			event.setCancelled(true);
-		}
-	}
 	
 	//-------------------------------------------------------	
 	// Antigravité
@@ -138,13 +131,13 @@ public class MainClass extends JavaPlugin implements Listener {
 	public void onCheckGravity(BlockPhysicsEvent event) {
 		NoGravity.cancelGravity(this, event);
 	}
-		
+
+	//-------------------------------------------------------
+	// Empêche l'oeuf de dragon de se téléporter et les torches/webs de depop sous l'eau
 	@EventHandler
-	public void onCobwebDepop(BlockFromToEvent event){
-		if(event.getToBlock().getType() == Material.WEB){
-			event.setCancelled(true);
-		}
-		else if (event.getToBlock().getType() == Material.TORCH){
+	public void onBlockChange(BlockFromToEvent event){
+		List<String> blockList = Arrays.asList("TORCH", "WEB");		
+		if(blockList.contains(event.getToBlock().getType().toString()) || event.getBlock().getType() == Material.DRAGON_EGG){
 			event.setCancelled(true);
 		}
 	}
@@ -278,7 +271,7 @@ public class MainClass extends JavaPlugin implements Listener {
 	public void onInteract(PlayerInteractEvent event) {
 		
 	    if(event.getAction() == Action.PHYSICAL) {
-	        if((event.getClickedBlock().getType() == Material.STONE_PLATE)||(event.getClickedBlock().getType() == Material.WOOD_PLATE)||(event.getClickedBlock().getType() == Material.GOLD_PLATE)||(event.getClickedBlock().getType() == Material.IRON_PLATE)) {
+	        if((event.getClickedBlock().getType().toString().contains("PLATE"))) {
 	        	byte metadata = event.getClickedBlock().getData();
 	        	// Si la metadata est différente de 0 on annule l'action
 	        	if(metadata != 0){
