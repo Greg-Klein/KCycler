@@ -47,4 +47,5 @@
            <scope>provided</scope>
     </dependency>
 </dependencies>
+	<name>KCycler</name>
 </project>
