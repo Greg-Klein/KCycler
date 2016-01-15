@@ -1,4 +1,4 @@
-package fr.mrkold.kcycler;
+package update.checker;
 
 public class VersionNumber {
 	

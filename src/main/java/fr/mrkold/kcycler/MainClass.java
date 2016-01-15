@@ -38,6 +38,8 @@ import org.mcstats.Metrics;
 
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 
+import update.checker.UpdateChecker;
+
 
 @SuppressWarnings("deprecation")
 public class MainClass extends JavaPlugin implements Listener {
@@ -57,6 +59,7 @@ public class MainClass extends JavaPlugin implements Listener {
     private BiomeCycler bcycler;
     private MetaCycler mcycler;
     private PaintCycler pcycler;
+    private KCCommands commandHandler;
 	
 	private WorldGuardPlugin getWorldGuard() {
 	    Plugin plugin = getServer().getPluginManager().getPlugin("WorldGuard");
@@ -79,13 +82,16 @@ public class MainClass extends JavaPlugin implements Listener {
 	        // Failed to submit the stats :-(
 	    }
 		
-		getCommand("bt").setExecutor(new KCCommands(this));
-		getCommand("mt").setExecutor(new KCCommands(this));
-		getCommand("ph").setExecutor(new KCCommands(this));
-		
 		bcycler = new BiomeCycler(this);
 		mcycler = new MetaCycler(this);
 		pcycler = new PaintCycler(this);
+		commandHandler = new KCCommands(this);
+		
+		getCommand("bt").setExecutor(commandHandler);
+		getCommand("mt").setExecutor(commandHandler);
+		getCommand("ph").setExecutor(commandHandler);
+		
+		
 		
 		this.getConfig().options().copyDefaults(true);
 		this.saveConfig();
@@ -188,7 +194,7 @@ public class MainClass extends JavaPlugin implements Listener {
 									event.setCancelled(true);
 								}
 								else{
-									MetaCycler.rightClickBlock(p, b, md);
+									mcycler.rightClickBlock(p, b, md);
 									event.setCancelled(true);
 								}
 							}
@@ -204,7 +210,7 @@ public class MainClass extends JavaPlugin implements Listener {
 									event.setCancelled(true);
 								}
 								else{
-									MetaCycler.leftClickBlock(p, b, md);
+									mcycler.leftClickBlock(p, b, md);
 									event.setCancelled(true);
 								}
 							}

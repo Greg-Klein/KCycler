@@ -13,14 +13,15 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 public class MetaCycler {
 	
-	public MainClass plugin;
+	private MainClass plugin;
+	
 	public MetaCycler(MainClass plugin){
 		this.plugin = plugin;
 	}
 	
 	
 	@SuppressWarnings("deprecation")
-	public static void leftClickBlock(Player player, Block b, Byte md){
+	public void leftClickBlock(Player player, Block b, Byte md){
     	b.setData((byte) (md - 1));
     	refreshChunk(b);
     	Block block = player.getTargetBlock(null, 5);
@@ -30,7 +31,7 @@ public class MetaCycler {
 	}
 	
 	@SuppressWarnings("deprecation")
-	public static void rightClickBlock(Player player, Block b, Byte md){
+	public void rightClickBlock(Player player, Block b, Byte md){
     	b.setData((byte) (md + 1));
     	refreshChunk(b);
     	Block block = player.getTargetBlock(null, 5);
@@ -70,7 +71,7 @@ public class MetaCycler {
     	}
     }
     
-    public void saveData() {
+    private void saveData() {
 		try {
 			plugin.data.save(plugin.myFile);
 		} catch (IOException e) {
@@ -78,7 +79,7 @@ public class MetaCycler {
 		}
 	}
     
-    static void refreshChunk(Block b){
+    private void refreshChunk(Block b){
     	World w = b.getWorld();
         Chunk c = b.getChunk();
         w.refreshChunk(c.getX(), c.getZ());

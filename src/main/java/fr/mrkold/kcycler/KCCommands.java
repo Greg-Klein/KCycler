@@ -51,13 +51,5 @@ public class KCCommands implements CommandExecutor {
 		}	
 		return false;
 	}
-	
-	public void saveData() {
-		try {
-			plugin.data.save(plugin.myFile);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 
 }

@@ -6,7 +6,8 @@ import org.bukkit.entity.Painting;
 
 public class PaintCycler {
 	
-	public MainClass plugin;
+	private MainClass plugin;
+	
 	public PaintCycler(MainClass plugin){
 		this.plugin = plugin;
 	}

@@ -16,7 +16,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 public class BiomeCycler {
 	
-	public MainClass plugin;
+	private MainClass plugin;
+	
 	public BiomeCycler(MainClass plugin){
 		this.plugin = plugin;
 	}
@@ -101,7 +102,7 @@ public class BiomeCycler {
     	}
     }
     
-    public void saveData() {
+    private void saveData() {
 		try {
 			plugin.data.save(plugin.myFile);
 		} catch (IOException e) {

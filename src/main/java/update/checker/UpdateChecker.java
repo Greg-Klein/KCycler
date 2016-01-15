@@ -1,4 +1,4 @@
-package fr.mrkold.kcycler;
+package update.checker;
 
 import java.io.BufferedReader;
 import java.io.IOException;
