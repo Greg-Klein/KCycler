@@ -1,7 +1,5 @@
 package fr.mrkold.kcycler;
 
-import java.io.IOException;
-
 import org.bukkit.ChatColor;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;

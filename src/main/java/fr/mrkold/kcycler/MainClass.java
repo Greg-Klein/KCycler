@@ -84,7 +84,7 @@ public class MainClass extends JavaPlugin implements Listener {
 		
 		bcycler = new BiomeCycler(this);
 		mcycler = new MetaCycler(this);
-		pcycler = new PaintCycler(this);
+		pcycler = new PaintCycler();
 		commandHandler = new KCCommands(this);
 		
 		getCommand("bt").setExecutor(commandHandler);

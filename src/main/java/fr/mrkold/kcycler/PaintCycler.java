@@ -6,12 +6,6 @@ import org.bukkit.entity.Painting;
 
 public class PaintCycler {
 	
-	private MainClass plugin;
-	
-	public PaintCycler(MainClass plugin){
-		this.plugin = plugin;
-	}
-	
 	@SuppressWarnings("deprecation")
 	public void rClick(Entity ent){
 		Painting painting = (Painting) ent;

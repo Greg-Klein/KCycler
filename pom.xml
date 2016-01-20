@@ -18,12 +18,20 @@
   </build>
   <repositories>
     <repository>
-        <id>mrkold-repo</id>
-        <url>http://mrkold.fr/maven/repo/</url>
+    	<id>releases</id>
+    	<url>http://mrkold.fr:8081/nexus/content/repositories/releases</url>
+  	</repository>
+    <repository>
+        <id>sk89q-release</id>
+        <url>http://mrkold.fr:8081/nexus/content/repositories/sk89q-release/</url>
+    </repository>
+    <repository>
+        <id>spigot-old</id>
+        <url>http://mrkold.fr:8081/nexus/content/repositories/spigot-old/</url>
     </repository>
 </repositories>
 <dependencies>
-    <!--Spigot API-->
+    <!--Spigot API -->
     <dependency>
            <groupId>org.spigotmc</groupId>
            <artifactId>spigot-api</artifactId>
@@ -31,7 +39,7 @@
            <scope>provided</scope>
     </dependency>
     
-    <!--PlotMe API-->
+    <!-- PlotMe API -->
     <dependency>
            <groupId>com.worldcretornica</groupId>
            <artifactId>plotme</artifactId>
@@ -39,7 +47,7 @@
            <scope>provided</scope>
     </dependency>
     
-    <!--WorldGuard API-->
+    <!-- WorldGuard API -->
     <dependency>
            <groupId>com.sk89q</groupId>
            <artifactId>worldguard</artifactId>
