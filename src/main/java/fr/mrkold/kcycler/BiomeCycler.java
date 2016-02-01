@@ -41,7 +41,6 @@ public class BiomeCycler {
 	}
 
 	public Biome getBiome(String bi) {
-		int i = 1;
 		for (Biome biome : biomes) {
 			if (bi.equals(biome.toString())) {
 				return biome;
@@ -52,10 +51,9 @@ public class BiomeCycler {
 
 	public void setBiome(Block b, Biome bi) {
 		if (bi != null) {
-			World w = b.getWorld();
-			Chunk c = b.getChunk();
-			w.setBiome(b.getX(), b.getZ(), bi);
-			w.refreshChunk(c.getX(), c.getZ());
+			World world = b.getWorld();
+			world.setBiome(b.getX(), b.getZ(), bi);
+			refreshChunk(b);
 		}
 	}
 
@@ -99,11 +97,15 @@ public class BiomeCycler {
 
 	private void saveData() {
 		try {
-			plugin.data.save(plugin.myFile);
+			plugin.data.save(plugin.dataFile);
 		} catch (IOException e) {
-			// catch block
 			e.printStackTrace();
 		}
 	}
 
+	private void refreshChunk(Block b) {
+		World w = b.getWorld();
+		Chunk c = b.getChunk();
+		w.refreshChunk(c.getX(), c.getZ());
+	}
 }
