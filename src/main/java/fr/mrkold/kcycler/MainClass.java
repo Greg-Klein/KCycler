@@ -129,14 +129,14 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 	}
 
 	// -------------------------------------------------------
-	// Antigravité
+	// Antigravite
 	@EventHandler
 	public void onCheckGravity(BlockPhysicsEvent event) {
 		NoGravity.cancelGravity(this, event);
 	}
 
 	// -------------------------------------------------------
-	// Empêche l'oeuf de dragon de se téléporter et les torches/webs de depop
+	// Empeche l'oeuf de dragon de se teleporter et les torches/webs de depop
 	// sous l'eau
 	@EventHandler
 	public void onBlockChange(BlockFromToEvent event) {
@@ -275,7 +275,7 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 		if (event.getAction() == Action.PHYSICAL) {
 			if ((event.getClickedBlock().getType().toString().contains("PLATE"))) {
 				byte metadata = event.getClickedBlock().getData();
-				// Si la metadata est différente de 0 on annule l'action
+				// Si la metadata est differente de 0 on annule l'action
 				if (metadata != 0) {
 					event.setCancelled(true);
 				}
