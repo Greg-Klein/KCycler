@@ -348,7 +348,6 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 		meta.setOwner(headOwner);
 		skull.setItemMeta(meta);
 		player.setItemInHand(skull);
-
 		player.playSound(player.getLocation(), Sound.ORB_PICKUP, 1, 1);
 	}
 
