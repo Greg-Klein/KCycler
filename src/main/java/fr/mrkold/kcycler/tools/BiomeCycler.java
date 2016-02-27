@@ -42,7 +42,7 @@ public class BiomeCycler {
 	private List<Biome> biomes = Arrays.asList(Biome.values());
 	private int maxBiome = biomes.size() - 1;
 
-	public Biome getNextBiome(Biome b) {
+	private Biome getNextBiome(Biome b) {
 		int i = biomes.indexOf(b) + 1;
 		if (i >= maxBiome) {
 			i = 0;
@@ -50,7 +50,7 @@ public class BiomeCycler {
 		return biomes.get(i);
 	}
 
-	public Biome getPreviousBiome(Biome b) {
+	private Biome getPreviousBiome(Biome b) {
 		int i = biomes.indexOf(b) - 1;
 		if (i <= 0) {
 			i = maxBiome;
@@ -58,7 +58,7 @@ public class BiomeCycler {
 		return biomes.get(i);
 	}
 
-	public Biome getBiome(String bi) {
+	private Biome getBiome(String bi) {
 		for (Biome biome : biomes) {
 			if (bi.equals(biome.toString())) {
 				return biome;
@@ -67,7 +67,7 @@ public class BiomeCycler {
 		return null;
 	}
 
-	public void setBiome(Block b, Biome bi) {
+	private void setBiome(Block b, Biome bi) {
 		if (bi != null) {
 			World world = b.getWorld();
 			world.setBiome(b.getX(), b.getZ(), bi);
