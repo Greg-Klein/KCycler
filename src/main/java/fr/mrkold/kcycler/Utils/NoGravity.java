@@ -1,4 +1,4 @@
-package fr.mrkold.kcycler;
+package fr.mrkold.kcycler.Utils;
 
 import java.util.List;
 

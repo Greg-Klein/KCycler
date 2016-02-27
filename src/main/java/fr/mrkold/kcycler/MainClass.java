@@ -1,6 +1,7 @@
 package fr.mrkold.kcycler;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -40,6 +41,7 @@ import org.mcstats.Metrics;
 
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 
+import fr.mrkold.kcycler.Utils.NoGravity;
 import fr.mrkold.kcycler.tools.BiomeCycler;
 import fr.mrkold.kcycler.tools.MetaCycler;
 import fr.mrkold.kcycler.tools.PaintCycler;
@@ -102,6 +104,7 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 		this.getConfig().options().copyDefaults(true);
 		this.saveConfig();
 
+		// Création du fichier data.yml
 		dataFile = new File(getDataFolder(), DATA_FILE_NAME);
 		if (!dataFile.exists()) {
 			try {
@@ -111,6 +114,25 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 				e.printStackTrace();
 			}
 		}
+
+		// Création de la liste des blocs
+		File matList = new File(getDataFolder(), "Material_List.txt");
+		if (!matList.exists()) {
+			Material[] materials = Material.class.getEnumConstants();
+			try {
+				FileWriter fw = new FileWriter(matList);
+				fw.write("NAME - ID\n----------\n");
+				for (Material m : materials) {
+					fw.write(m.toString() + " - " + m.getId() + "\n");
+				}
+				fw.close();
+				matList.createNewFile();
+			} catch (IOException e) {
+				getLogger().warning("Failed to write material list file");
+				e.printStackTrace();
+			}
+		}
+
 		pluginConfig = YamlConfiguration.loadConfiguration(dataFile);
 
 		// Affichage du message de succès pour le chargement
@@ -159,12 +181,15 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 		Player p = event.getPlayer();
 		Block b = event.getClickedBlock();
 		if (b != null) {
-			if (p.hasPermission(USE_PERMISSION)) {
+			List<Integer> blacklist = getConfig().getIntegerList("cycler-blacklist");
+			// Ajout de la double plante à la blacklist
+			blacklist.add(175);
+			if (p.hasPermission(USE_PERMISSION) && !blacklist.contains(b.getTypeId())) {
 				try {
 					if (getWorldGuard().canBuild(p, b) || p.hasPermission(ADMIN_PERMISSION)) {
 						Byte md = event.getClickedBlock().getData();
-						List<Integer> blacklist = getConfig().getIntegerList("cycler-blacklist");
 						if (p.isSneaking()) {
+							// Copier
 							if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
 								if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
 									biomeCycler.copyBiome(p, b);
@@ -175,6 +200,7 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 									event.setCancelled(true);
 								}
 							}
+							// Coller
 							if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 								if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
 									biomeCycler.pasteBiome(p, b);
@@ -186,34 +212,26 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 								}
 							}
 						} else {
+							// En avant
 							if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 								if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
 									biomeCycler.rightClickBlock(p, b);
 									event.setCancelled(true);
 								}
 								if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
-									if (blacklist.contains(b.getTypeId()) || b.getTypeId() == 175) {
-										p.sendMessage(ChatColor.RED + "Action impossible");
-										event.setCancelled(true);
-									} else {
-										metaCycler.rightClickBlock(p, b, md);
-										event.setCancelled(true);
-									}
+									metaCycler.rightClickBlock(p, b, md);
+									event.setCancelled(true);
 								}
 							}
+							// En arrière
 							if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
 								if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
 									biomeCycler.leftClickBlock(p, b);
 									event.setCancelled(true);
 								}
 								if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
-									if (blacklist.contains(b.getTypeId()) || b.getTypeId() == 175) {
-										p.sendMessage(ChatColor.RED + "Action impossible");
-										event.setCancelled(true);
-									} else {
-										metaCycler.leftClickBlock(p, b, md);
-										event.setCancelled(true);
-									}
+									metaCycler.leftClickBlock(p, b, md);
+									event.setCancelled(true);
 								}
 							}
 						}
@@ -319,16 +337,16 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 	@EventHandler
 	public void onBlockPlace(BlockPlaceEvent e) {
 		Player p = e.getPlayer();
-		ItemStack item = p.getItemInHand();
-		ItemMeta im = item.getItemMeta();
-		String name = im.getDisplayName();
+		String name = p.getItemInHand().getItemMeta().getDisplayName();
 		try {
 			String[] tab = name.split(":");
-			int mdint = Integer.parseInt(tab[1]);
-			byte md = (byte) mdint;
-			e.getBlockPlaced().setData(md);
-		} catch (NullPointerException npe) {
-			// Si le bloc n'a pas de metadata
+			if (tab[1] != null) {
+				int mdint = Integer.parseInt(tab[1]);
+				byte md = (byte) mdint;
+				e.getBlockPlaced().setData(md);
+			}
+		} catch (Exception exception) {
+			// Ne rien faire
 		}
 	}
 
