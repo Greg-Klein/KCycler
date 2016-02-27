@@ -1,4 +1,4 @@
-package fr.mrkold.kcycler;
+package fr.mrkold.kcycler.tools;
 
 import org.bukkit.Art;
 import org.bukkit.entity.Entity;

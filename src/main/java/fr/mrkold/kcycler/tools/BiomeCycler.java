@@ -1,4 +1,4 @@
-package fr.mrkold.kcycler;
+package fr.mrkold.kcycler.tools;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
@@ -13,12 +14,29 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import fr.mrkold.kcycler.MainClass;
+
 public class BiomeCycler {
 
 	private MainClass plugin;
+	private Material material;
 
-	public BiomeCycler(MainClass plugin) {
+	public Material getMaterial() {
+		return material;
+	}
+
+	public void setMaterial(Material material) {
+		this.material = material;
+	}
+
+	@SuppressWarnings("deprecation")
+	public BiomeCycler(MainClass plugin, Material material) {
 		this.plugin = plugin;
+		this.material = material;
+		Integer bt = plugin.getConfig().getInt("biome-tool");
+		if (bt != 0) {
+			material = Material.getMaterial(bt);
+		}
 	}
 
 	private List<Biome> biomes = Arrays.asList(Biome.values());
@@ -76,7 +94,7 @@ public class BiomeCycler {
 	public void copyBiome(Player p, Block b) {
 		String player = p.getName();
 		String bi = b.getBiome().toString();
-		plugin.data.set(player + ".biome", bi);
+		plugin.getPluginConfig().set(player + ".biome", bi);
 		saveData();
 		ItemStack wand = p.getItemInHand();
 		ItemMeta im = wand.getItemMeta();
@@ -86,7 +104,7 @@ public class BiomeCycler {
 
 	public void pasteBiome(Player p, Block b) {
 		String player = p.getName();
-		String bi = plugin.data.getString(player + ".biome");
+		String bi = plugin.getPluginConfig().getString(player + ".biome");
 		if (bi == null || bi.isEmpty()) {
 			p.sendMessage(ChatColor.RED + "Copiez un biome d'abord");
 		} else {
@@ -97,7 +115,7 @@ public class BiomeCycler {
 
 	private void saveData() {
 		try {
-			plugin.data.save(plugin.dataFile);
+			plugin.getPluginConfig().save(plugin.getDataFile());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

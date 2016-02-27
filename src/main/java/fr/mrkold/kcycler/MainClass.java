@@ -9,6 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -31,6 +32,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -38,90 +40,93 @@ import org.mcstats.Metrics;
 
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 
+import fr.mrkold.kcycler.tools.BiomeCycler;
+import fr.mrkold.kcycler.tools.MetaCycler;
+import fr.mrkold.kcycler.tools.PaintCycler;
 import update.checker.UpdateChecker;
 
 @SuppressWarnings("deprecation")
 public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 
-	private PluginDescriptionFile pdf = this.getDescription();
-	private final String version = pdf.getVersion();
-	private final String nomplugin = pdf.getName();
-	private Integer bt = getConfig().getInt("biome-tool");
-	private Integer mt = getConfig().getInt("meta-tool");
-	protected Material biomeTool = Material.BLAZE_ROD;
-	protected Material metaTool = Material.STICK;
-	protected File dataFile;
-	protected FileConfiguration data;
+	private PluginDescriptionFile pluginDescription;
+	private File dataFile;
+	private FileConfiguration pluginConfig;
+	private BiomeCycler biomeCycler;
+	private MetaCycler metaCycler;
+	private PaintCycler paintCycler;
+	private KCCommands commandHandler;
 
-	BiomeCycler bcycler;
-	MetaCycler mcycler;
-	PaintCycler pcycler;
-	KCCommands commandHandler;
+	public File getDataFile() {
+		return dataFile;
+	}
 
-	private WorldGuardPlugin getWorldGuard() {
-		Plugin plugin = getServer().getPluginManager().getPlugin("WorldGuard");
+	public FileConfiguration getPluginConfig() {
+		return pluginConfig;
+	}
 
-		// WorldGuard
-		if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
-			return null;
+	// Détection de WorldGuard
+	private WorldGuardPlugin getWorldGuard() throws Exception {
+		Plugin wg = getServer().getPluginManager().getPlugin("WorldGuard");
+		if (wg == null || !(wg instanceof WorldGuardPlugin)) {
+			throw new Exception("Worldguard is not running on the server");
 		}
-
-		return (WorldGuardPlugin) plugin;
+		return (WorldGuardPlugin) wg;
 	}
 
 	@Override
 	public void onEnable() {
 
+		// Enregistrement des evenements
+		Bukkit.getServer().getPluginManager().registerEvents(this, this);
+
+		// Statistiques
 		try {
 			Metrics metrics = new Metrics(this);
 			metrics.start();
 		} catch (IOException e) {
-			// Failed to submit the stats :-(
+			getLogger().info("Failed to submit the stats");
 		}
 
-		bcycler = new BiomeCycler(this);
-		mcycler = new MetaCycler(this);
-		pcycler = new PaintCycler();
+		// Initialisation
+		biomeCycler = new BiomeCycler(this, Material.BLAZE_ROD);
+		metaCycler = new MetaCycler(this, Material.STICK);
+		paintCycler = new PaintCycler();
 		commandHandler = new KCCommands(this);
+		pluginDescription = this.getDescription();
 
 		getCommand(BIOMETOOL_COMMAND).setExecutor(commandHandler);
 		getCommand(METATOOL_COMMAND).setExecutor(commandHandler);
 		getCommand(PLAYERHEAD_COMMAND).setExecutor(commandHandler);
 
+		// Création de la config
 		this.getConfig().options().copyDefaults(true);
 		this.saveConfig();
-
-		Bukkit.getServer().getPluginManager().registerEvents(this, this);
 
 		dataFile = new File(getDataFolder(), DATA_FILE_NAME);
 		if (!dataFile.exists()) {
 			try {
 				dataFile.createNewFile();
 			} catch (IOException e) {
+				getLogger().warning("Failed to write data file");
 				e.printStackTrace();
 			}
 		}
+		pluginConfig = YamlConfiguration.loadConfiguration(dataFile);
 
-		data = YamlConfiguration.loadConfiguration(dataFile);
-
-		if (bt != 0 && mt != 0) {
-			biomeTool = Material.getMaterial(bt);
-			metaTool = Material.getMaterial(mt);
-		}
-
-		getLogger().info(nomplugin + " v" + version + " enabled");
+		// Affichage du message de succès pour le chargement
+		getLogger().info(pluginDescription.getName() + " v" + pluginDescription.getVersion() + " enabled");
 	}
 
 	@Override
 	public void onDisable() {
-		getLogger().info(pdf.getName() + " v" + pdf.getVersion() + " disabled");
+		getLogger().info(pluginDescription.getName() + " v" + pluginDescription.getVersion() + " disabled");
 	}
 
 	// A la connection
 	@EventHandler
 	public void onJoin(PlayerJoinEvent e) {
 		if (e.getPlayer().isOp()) {
-			String udmsg = UpdateChecker.checkVersion(pdf);
+			String udmsg = UpdateChecker.checkVersion(pluginDescription);
 			if (!udmsg.equalsIgnoreCase("")) {
 				e.getPlayer().sendMessage(udmsg);
 			}
@@ -155,64 +160,68 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 		Block b = event.getClickedBlock();
 		if (b != null) {
 			if (p.hasPermission(USE_PERMISSION)) {
-				if (getWorldGuard().canBuild(p, b) || p.hasPermission(ADMIN_PERMISSION)) {
-					Byte md = event.getClickedBlock().getData();
-					List<Integer> blacklist = getConfig().getIntegerList("cycler-blacklist");
-					if (p.isSneaking()) {
-						if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-							if (event.getPlayer().getItemInHand().getType() == biomeTool) {
-								bcycler.copyBiome(p, b);
-								event.setCancelled(true);
+				try {
+					if (getWorldGuard().canBuild(p, b) || p.hasPermission(ADMIN_PERMISSION)) {
+						Byte md = event.getClickedBlock().getData();
+						List<Integer> blacklist = getConfig().getIntegerList("cycler-blacklist");
+						if (p.isSneaking()) {
+							if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+								if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
+									biomeCycler.copyBiome(p, b);
+									event.setCancelled(true);
+								}
+								if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
+									metaCycler.copyMeta(p, b);
+									event.setCancelled(true);
+								}
 							}
-							if (event.getPlayer().getItemInHand().getType() == metaTool) {
-								mcycler.copyMeta(p, b);
-								event.setCancelled(true);
+							if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+								if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
+									biomeCycler.pasteBiome(p, b);
+									event.setCancelled(true);
+								}
+								if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
+									metaCycler.pasteMeta(p, b);
+									event.setCancelled(true);
+								}
 							}
-						}
-						if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-							if (event.getPlayer().getItemInHand().getType() == biomeTool) {
-								bcycler.pasteBiome(p, b);
-								event.setCancelled(true);
+						} else {
+							if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+								if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
+									biomeCycler.rightClickBlock(p, b);
+									event.setCancelled(true);
+								}
+								if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
+									if (blacklist.contains(b.getTypeId()) || b.getTypeId() == 175) {
+										p.sendMessage(ChatColor.RED + "Action impossible");
+										event.setCancelled(true);
+									} else {
+										metaCycler.rightClickBlock(p, b, md);
+										event.setCancelled(true);
+									}
+								}
 							}
-							if (event.getPlayer().getItemInHand().getType() == metaTool) {
-								mcycler.pasteMeta(p, b);
-								event.setCancelled(true);
+							if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+								if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
+									biomeCycler.leftClickBlock(p, b);
+									event.setCancelled(true);
+								}
+								if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
+									if (blacklist.contains(b.getTypeId()) || b.getTypeId() == 175) {
+										p.sendMessage(ChatColor.RED + "Action impossible");
+										event.setCancelled(true);
+									} else {
+										metaCycler.leftClickBlock(p, b, md);
+										event.setCancelled(true);
+									}
+								}
 							}
 						}
 					} else {
-						if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-							if (event.getPlayer().getItemInHand().getType() == biomeTool) {
-								bcycler.rightClickBlock(p, b);
-								event.setCancelled(true);
-							}
-							if (event.getPlayer().getItemInHand().getType() == metaTool) {
-								if (blacklist.contains(b.getTypeId()) || b.getTypeId() == 175) {
-									p.sendMessage(ChatColor.RED + "Action impossible");
-									event.setCancelled(true);
-								} else {
-									mcycler.rightClickBlock(p, b, md);
-									event.setCancelled(true);
-								}
-							}
-						}
-						if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-							if (event.getPlayer().getItemInHand().getType() == biomeTool) {
-								bcycler.leftClickBlock(p, b);
-								event.setCancelled(true);
-							}
-							if (event.getPlayer().getItemInHand().getType() == metaTool) {
-								if (blacklist.contains(b.getTypeId()) || b.getTypeId() == 175) {
-									p.sendMessage(ChatColor.RED + "Action impossible");
-									event.setCancelled(true);
-								} else {
-									mcycler.leftClickBlock(p, b, md);
-									event.setCancelled(true);
-								}
-							}
-						}
+						p.sendMessage(ChatColor.RED + "Vous n'avez pas l'autorisation d'effectuer cette action ici");
 					}
-				} else {
-					p.sendMessage(ChatColor.RED + "Vous n'avez pas l'autorisation d'effectuer cette action ici");
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 		}
@@ -221,14 +230,13 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 	// Affichage de l'id du bloc lorsqu'on le regarde
 	@EventHandler
 	public void onMove(PlayerMoveEvent event) {
-		Player p = event.getPlayer();
-		if (event.getPlayer().getItemInHand().getType() == metaTool) {
+		ItemStack wand = event.getPlayer().getItemInHand();
+		if (wand.getType() == metaCycler.getMaterial()) {
 			Block b = event.getPlayer().getTargetBlock(null, 10);
 			int id = b.getTypeId();
 			if (id != 0) {
 				byte mdb = b.getData();
 				int md = mdb;
-				ItemStack wand = p.getItemInHand();
 				ItemMeta im = wand.getItemMeta();
 				im.setDisplayName(ChatColor.GREEN.toString() + id + ":" + md);
 				wand.setItemMeta(im);
@@ -240,15 +248,19 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 	@EventHandler
 	public void rClickPainting(PlayerInteractEntityEvent e) {
 		Player p = e.getPlayer();
-		Entity ent = e.getRightClicked();
-		Location loc = ent.getLocation();
 		if (p.hasPermission(USE_PERMISSION)) {
-			if (getWorldGuard().canBuild(p, loc) || p.hasPermission(ADMIN_PERMISSION)) {
-				if (ent.getType() == EntityType.PAINTING) {
-					if (p.getItemInHand().getType() == metaTool) {
-						pcycler.rClick(ent);
+			Entity ent = e.getRightClicked();
+			Location loc = ent.getLocation();
+			try {
+				if (getWorldGuard().canBuild(p, loc) || p.hasPermission(ADMIN_PERMISSION)) {
+					if (ent.getType() == EntityType.PAINTING) {
+						if (p.getItemInHand().getType() == metaCycler.getMaterial()) {
+							paintCycler.rClick(ent);
+						}
 					}
 				}
+			} catch (Exception e1) {
+				e1.printStackTrace();
 			}
 		}
 	}
@@ -256,14 +268,18 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 	@EventHandler
 	public void lClickPainting(PaintingBreakByEntityEvent e) {
 		Player p = (Player) e.getRemover();
-		Painting painting = e.getPainting();
-		Location loc = painting.getLocation();
 		if (p.hasPermission(USE_PERMISSION)) {
-			if (getWorldGuard().canBuild(p, loc) || p.hasPermission(ADMIN_PERMISSION)) {
-				if (p.getItemInHand().getType() == metaTool) {
-					pcycler.lClick(painting);
-					e.setCancelled(true);
+			Painting painting = e.getPainting();
+			Location loc = painting.getLocation();
+			try {
+				if (getWorldGuard().canBuild(p, loc) || p.hasPermission(ADMIN_PERMISSION)) {
+					if (p.getItemInHand().getType() == metaCycler.getMaterial()) {
+						paintCycler.lClick(painting);
+						e.setCancelled(true);
+					}
 				}
+			} catch (Exception e1) {
+				e1.printStackTrace();
 			}
 		}
 	}
@@ -312,8 +328,28 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 			byte md = (byte) mdint;
 			e.getBlockPlaced().setData(md);
 		} catch (NullPointerException npe) {
-			// npe.printStackTrace();
+			// Si le bloc n'a pas de metadata
 		}
+	}
+
+	public void giveBiomeTool(Player player) {
+		player.setItemInHand(new ItemStack(biomeCycler.getMaterial(), 1));
+		player.playSound(player.getLocation(), Sound.ORB_PICKUP, 1, 1);
+	}
+
+	public void giveMetaTool(Player player) {
+		player.setItemInHand(new ItemStack(metaCycler.getMaterial(), 1));
+		player.playSound(player.getLocation(), Sound.ORB_PICKUP, 1, 1);
+	}
+
+	public void givePlayerHead(Player player, String headOwner) {
+		ItemStack skull = new ItemStack(397, 1, (short) 3);
+		SkullMeta meta = (SkullMeta) skull.getItemMeta();
+		meta.setOwner(headOwner);
+		skull.setItemMeta(meta);
+		player.setItemInHand(skull);
+
+		player.playSound(player.getLocation(), Sound.ORB_PICKUP, 1, 1);
 	}
 
 }

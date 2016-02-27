@@ -1,13 +1,10 @@
 package fr.mrkold.kcycler;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.SkullMeta;
 
 public class KCCommands implements CommandExecutor, PluginConstants {
 
@@ -18,18 +15,15 @@ public class KCCommands implements CommandExecutor, PluginConstants {
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		if (sender instanceof Player) {
 			Player p = (Player) sender;
 
 			if (label.equalsIgnoreCase(METATOOL_COMMAND)) {
-				p.setItemInHand(new ItemStack(plugin.metaTool, 1));
-				p.playSound(p.getLocation(), Sound.ORB_PICKUP, 1, 1);
+				plugin.giveMetaTool(p);
 			}
 			if (label.equalsIgnoreCase(BIOMETOOL_COMMAND)) {
-				p.setItemInHand(new ItemStack(plugin.biomeTool, 1));
-				p.playSound(p.getLocation(), Sound.ORB_PICKUP, 1, 1);
+				plugin.giveBiomeTool(p);
 			}
 			if (label.equalsIgnoreCase(PLAYERHEAD_COMMAND)) {
 				if (args.length == 0) {
@@ -37,14 +31,7 @@ public class KCCommands implements CommandExecutor, PluginConstants {
 					return true;
 				} else {
 					String a0 = args[0];
-					ItemStack skull = new ItemStack(397, 1, (short) 3);
-					SkullMeta meta = (SkullMeta) skull.getItemMeta();
-					meta.setOwner(a0);
-					skull.setItemMeta(meta);
-					;
-					p.setItemInHand(skull);
-
-					p.playSound(p.getLocation(), Sound.ORB_PICKUP, 1, 1);
+					plugin.givePlayerHead(p, a0);
 				}
 			}
 		}
