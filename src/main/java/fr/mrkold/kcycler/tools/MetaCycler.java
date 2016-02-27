@@ -1,4 +1,4 @@
-package fr.mrkold.kcycler;
+package fr.mrkold.kcycler.tools;
 
 import java.io.IOException;
 
@@ -11,12 +11,29 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import fr.mrkold.kcycler.MainClass;
+
 public class MetaCycler {
 
 	private MainClass plugin;
+	private Material material;
 
-	public MetaCycler(MainClass plugin) {
+	public Material getMaterial() {
+		return material;
+	}
+
+	public void setMaterial(Material material) {
+		this.material = material;
+	}
+
+	@SuppressWarnings("deprecation")
+	public MetaCycler(MainClass plugin, Material material) {
 		this.plugin = plugin;
+		this.material = material;
+		Integer mt = plugin.getConfig().getInt("meta-tool");
+		if (mt != 0) {
+			material = Material.getMaterial(mt);
+		}
 	}
 
 	@SuppressWarnings("deprecation")
@@ -44,8 +61,8 @@ public class MetaCycler {
 		String player = p.getName();
 		byte md = b.getData();
 		Integer mat = b.getTypeId();
-		plugin.data.set(player + ".block", mat);
-		plugin.data.set(player + ".meta", md);
+		plugin.getPluginConfig().set(player + ".block", mat);
+		plugin.getPluginConfig().set(player + ".meta", md);
 		saveData();
 		ItemStack wand = p.getItemInHand();
 		ItemMeta im = wand.getItemMeta();
@@ -56,8 +73,8 @@ public class MetaCycler {
 	@SuppressWarnings("deprecation")
 	public void pasteMeta(Player p, Block b) {
 		String player = p.getName();
-		Integer matint = plugin.data.getInt(player + ".block");
-		Integer mdint = plugin.data.getInt(player + ".meta");
+		Integer matint = plugin.getPluginConfig().getInt(player + ".block");
+		Integer mdint = plugin.getPluginConfig().getInt(player + ".meta");
 		if (matint == 0) {
 			p.sendMessage(ChatColor.RED + "Copiez un bloc d'abord");
 		} else {
@@ -71,7 +88,7 @@ public class MetaCycler {
 
 	private void saveData() {
 		try {
-			plugin.data.save(plugin.dataFile);
+			plugin.getPluginConfig().save(plugin.getDataFile());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
