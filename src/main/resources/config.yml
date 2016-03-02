@@ -1,5 +1,6 @@
 biome-tool: 369
 meta-tool: 280
+prevent-leaves-decay: true
 antigravity:
 - ANVIL
 - BED_BLOCK

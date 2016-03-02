@@ -25,6 +25,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.LeavesDecayEvent;
 import org.bukkit.event.inventory.InventoryCreativeEvent;
 import org.bukkit.event.painting.PaintingBreakByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -160,6 +161,15 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 				e.getPlayer().sendMessage(updateMessage);
 			}
 		}
+	}
+
+	// --------------------------------------------------------
+	// Empecher les feuilles de disparaitre
+
+	@EventHandler
+	public void onLeavesDecay(LeavesDecayEvent event) {
+		boolean leavesDecay = getConfig().getBoolean("prevent-leaves-decay");
+		event.setCancelled(leavesDecay);
 	}
 
 	// -------------------------------------------------------
