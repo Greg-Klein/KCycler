@@ -25,6 +25,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.LeavesDecayEvent;
 import org.bukkit.event.inventory.InventoryCreativeEvent;
 import org.bukkit.event.painting.PaintingBreakByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -48,7 +49,7 @@ import fr.mrkold.kcycler.tools.PaintCycler;
 import update.checker.UpdateChecker;
 
 @SuppressWarnings("deprecation")
-public class MainClass extends JavaPlugin implements Listener, PluginConstants {
+public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstants {
 
 	private PluginDescriptionFile pluginDescription;
 	private File dataFile;
@@ -56,7 +57,8 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 	private BiomeCycler biomeCycler;
 	private MetaCycler metaCycler;
 	private PaintCycler paintCycler;
-	private KCCommands commandHandler;
+	private CommandManager commandHandler;
+	private String updateMessage = "";
 
 	public File getDataFile() {
 		return dataFile;
@@ -93,7 +95,7 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 		biomeCycler = new BiomeCycler(this, Material.BLAZE_ROD);
 		metaCycler = new MetaCycler(this, Material.STICK);
 		paintCycler = new PaintCycler();
-		commandHandler = new KCCommands(this);
+		commandHandler = new CommandManager(this);
 		pluginDescription = this.getDescription();
 
 		getCommand(BIOMETOOL_COMMAND).setExecutor(commandHandler);
@@ -133,7 +135,14 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 			}
 		}
 
+		// Chargement du fichier de config
 		pluginConfig = YamlConfiguration.loadConfiguration(dataFile);
+
+		// Vérification de la version
+		updateMessage = UpdateChecker.checkVersion(pluginDescription);
+		if (!updateMessage.equals("")) {
+			Bukkit.getServer().getConsoleSender().sendMessage(updateMessage);
+		}
 
 		// Affichage du message de succès pour le chargement
 		getLogger().info(pluginDescription.getName() + " v" + pluginDescription.getVersion() + " enabled");
@@ -148,11 +157,19 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 	@EventHandler
 	public void onJoin(PlayerJoinEvent e) {
 		if (e.getPlayer().isOp()) {
-			String udmsg = UpdateChecker.checkVersion(pluginDescription);
-			if (!udmsg.equalsIgnoreCase("")) {
-				e.getPlayer().sendMessage(udmsg);
+			if (!updateMessage.equalsIgnoreCase("")) {
+				e.getPlayer().sendMessage(updateMessage);
 			}
 		}
+	}
+
+	// --------------------------------------------------------
+	// Empecher les feuilles de disparaitre
+
+	@EventHandler
+	public void onLeavesDecay(LeavesDecayEvent event) {
+		boolean leavesDecay = getConfig().getBoolean("prevent-leaves-decay");
+		event.setCancelled(leavesDecay);
 	}
 
 	// -------------------------------------------------------
@@ -236,7 +253,7 @@ public class MainClass extends JavaPlugin implements Listener, PluginConstants {
 							}
 						}
 					} else {
-						p.sendMessage(ChatColor.RED + "Vous n'avez pas l'autorisation d'effectuer cette action ici");
+						p.sendMessage(ChatColor.RED + "You don't have permission to do this here");
 					}
 				} catch (Exception e) {
 					e.printStackTrace();

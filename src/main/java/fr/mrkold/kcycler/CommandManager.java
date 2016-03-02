@@ -6,11 +6,11 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class KCCommands implements CommandExecutor, PluginConstants {
+public class CommandManager implements CommandExecutor, PluginConstants {
 
-	private MainClass plugin;
+	private KCyclerPlugin plugin;
 
-	public KCCommands(MainClass plugin) {
+	public CommandManager(KCyclerPlugin plugin) {
 		this.plugin = plugin;
 	}
 
@@ -26,9 +26,8 @@ public class KCCommands implements CommandExecutor, PluginConstants {
 				plugin.giveBiomeTool(p);
 			}
 			if (label.equalsIgnoreCase(PLAYERHEAD_COMMAND)) {
-				if (args.length == 0) {
-					p.sendMessage(ChatColor.RED + "Utilisation: /" + PLAYERHEAD_COMMAND + " <nomdujoueur>");
-					return true;
+				if (args.length != 1) {
+					p.sendMessage(ChatColor.RED + "Usage: /" + PLAYERHEAD_COMMAND + " <PlayerName>");
 				} else {
 					String a0 = args[0];
 					plugin.givePlayerHead(p, a0);
