@@ -14,11 +14,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import fr.mrkold.kcycler.MainClass;
+import fr.mrkold.kcycler.KCyclerPlugin;
 
+@SuppressWarnings("deprecation")
 public class BiomeCycler {
 
-	private MainClass plugin;
+	private KCyclerPlugin plugin;
 	private Material material;
 
 	public Material getMaterial() {
@@ -29,8 +30,7 @@ public class BiomeCycler {
 		this.material = material;
 	}
 
-	@SuppressWarnings("deprecation")
-	public BiomeCycler(MainClass plugin, Material material) {
+	public BiomeCycler(KCyclerPlugin plugin, Material material) {
 		this.plugin = plugin;
 		this.material = material;
 		Integer bt = plugin.getConfig().getInt("biome-tool");
@@ -106,7 +106,7 @@ public class BiomeCycler {
 		String player = p.getName();
 		String bi = plugin.getPluginConfig().getString(player + ".biome");
 		if (bi == null || bi.isEmpty()) {
-			p.sendMessage(ChatColor.RED + "Copiez un biome d'abord");
+			p.sendMessage(ChatColor.RED + "Copy a biome first");
 		} else {
 			Biome bio = getBiome(bi);
 			setBiome(b, bio);
