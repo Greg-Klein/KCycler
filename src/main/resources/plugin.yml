@@ -2,7 +2,7 @@ name: KCycler
 main: fr.mrkold.kcycler.KCyclerPlugin
 version: "${project.version}"
 author: MrKold
-softdepend: [WorldGuard]
+softdepend: [WorldGuard, PlotSquared]
 commands:
     mt:
       description: Give MetaTool
