@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>fr.mrkold</groupId>
   <artifactId>KCycler</artifactId>
-  <version>1.1.4</version>
+  <version>1.2.0</version>
   <name>KCycler</name>
   <build>
     <plugins>
@@ -40,7 +40,12 @@
            <version>1.7.10-R0.1-SNAPSHOT</version>
            <scope>provided</scope>
     </dependency>
-    
+    <!-- PlotSquared -->
+    <dependency>
+	  <groupId>com.intellectualcrafters</groupId>
+	  <artifactId>plotsquared</artifactId>
+	  <version>3.2.27</version>
+	</dependency>
     <!-- WorldGuard API -->
     <dependency>
            <groupId>com.sk89q</groupId>
