@@ -35,14 +35,13 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.mcstats.Metrics;
 
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-
 import fr.mrkold.kcycler.Utils.NoGravity;
+import fr.mrkold.kcycler.Utils.PermissionsUtils;
+import fr.mrkold.kcycler.Utils.PluginUtils;
 import fr.mrkold.kcycler.tools.BiomeCycler;
 import fr.mrkold.kcycler.tools.MetaCycler;
 import fr.mrkold.kcycler.tools.PaintCycler;
@@ -58,7 +57,14 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 	private MetaCycler metaCycler;
 	private PaintCycler paintCycler;
 	private CommandManager commandHandler;
+	private PluginUtils pluginUtils;
+	private PermissionsUtils permsUtils;
 	private String updateMessage = "";
+	private List<Integer> cyclerBlacklist;
+
+	/**
+	 * Getters & Setters
+	 */
 
 	public File getDataFile() {
 		return dataFile;
@@ -68,22 +74,25 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 		return pluginConfig;
 	}
 
-	// Détection de WorldGuard
-	private WorldGuardPlugin getWorldGuard() throws Exception {
-		Plugin wg = getServer().getPluginManager().getPlugin("WorldGuard");
-		if (wg == null || !(wg instanceof WorldGuardPlugin)) {
-			throw new Exception("Worldguard is not running on the server");
-		}
-		return (WorldGuardPlugin) wg;
+	public PluginUtils getPluginUtils() {
+		return pluginUtils;
 	}
+
+	/**
+	 * END Getters & Setters
+	 */
 
 	@Override
 	public void onEnable() {
 
-		// Enregistrement des evenements
+		/**
+		 * Register events
+		 */
 		Bukkit.getServer().getPluginManager().registerEvents(this, this);
 
-		// Statistiques
+		/**
+		 * Stats
+		 */
 		try {
 			Metrics metrics = new Metrics(this);
 			metrics.start();
@@ -91,22 +100,30 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 			getLogger().info("Failed to submit the stats");
 		}
 
-		// Initialisation
+		/**
+		 * Initialisation
+		 */
 		biomeCycler = new BiomeCycler(this, Material.BLAZE_ROD);
 		metaCycler = new MetaCycler(this, Material.STICK);
 		paintCycler = new PaintCycler();
 		commandHandler = new CommandManager(this);
+		pluginUtils = new PluginUtils(this);
+		permsUtils = new PermissionsUtils(this);
 		pluginDescription = this.getDescription();
 
 		getCommand(BIOMETOOL_COMMAND).setExecutor(commandHandler);
 		getCommand(METATOOL_COMMAND).setExecutor(commandHandler);
 		getCommand(PLAYERHEAD_COMMAND).setExecutor(commandHandler);
 
-		// Création de la config
+		/**
+		 * Create config
+		 */
 		this.getConfig().options().copyDefaults(true);
 		this.saveConfig();
 
-		// Création du fichier data.yml
+		/**
+		 * Create and load data file
+		 */
 		dataFile = new File(getDataFolder(), DATA_FILE_NAME);
 		if (!dataFile.exists()) {
 			try {
@@ -116,8 +133,11 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 				e.printStackTrace();
 			}
 		}
+		pluginConfig = YamlConfiguration.loadConfiguration(dataFile);
 
-		// Création de la liste des blocs
+		/**
+		 * Create blocks list file
+		 */
 		File matList = new File(getDataFolder(), "Material_List.txt");
 		if (!matList.exists()) {
 			Material[] materials = Material.class.getEnumConstants();
@@ -135,16 +155,23 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 			}
 		}
 
-		// Chargement du fichier de config
-		pluginConfig = YamlConfiguration.loadConfiguration(dataFile);
-
-		// Vérification de la version
+		/**
+		 * Check for new version
+		 */
 		updateMessage = UpdateChecker.checkVersion(pluginDescription);
 		if (!updateMessage.equals("")) {
 			Bukkit.getServer().getConsoleSender().sendMessage(updateMessage);
 		}
 
-		// Affichage du message de succès pour le chargement
+		/**
+		 * Initialize blacklist and add double plant to it
+		 */
+		cyclerBlacklist = getConfig().getIntegerList("cycler-blacklist");
+		cyclerBlacklist.add(175);
+
+		/**
+		 * Show loading success message
+		 */
 		getLogger().info(pluginDescription.getName() + " v" + pluginDescription.getVersion() + " enabled");
 	}
 
@@ -153,7 +180,11 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 		getLogger().info(pluginDescription.getName() + " v" + pluginDescription.getVersion() + " disabled");
 	}
 
-	// A la connection
+	/**
+	 * When player join game
+	 * 
+	 * @param PlayerJoinEvent
+	 */
 	@EventHandler
 	public void onJoin(PlayerJoinEvent e) {
 		if (e.getPlayer().isOp()) {
@@ -163,25 +194,32 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 		}
 	}
 
-	// --------------------------------------------------------
-	// Empecher les feuilles de disparaitre
-
+	/**
+	 * Cancel leaves decay
+	 * 
+	 * @param LeavesDecayEvent
+	 */
 	@EventHandler
 	public void onLeavesDecay(LeavesDecayEvent event) {
 		boolean leavesDecay = getConfig().getBoolean("prevent-leaves-decay");
 		event.setCancelled(leavesDecay);
 	}
 
-	// -------------------------------------------------------
-	// Antigravite
+	/**
+	 * Cancel gravity
+	 * 
+	 * @param BlockPhysicsEvent
+	 */
 	@EventHandler
 	public void onCheckGravity(BlockPhysicsEvent event) {
 		NoGravity.cancelGravity(this, event);
 	}
 
-	// -------------------------------------------------------
-	// Empeche l'oeuf de dragon de se teleporter et les torches/webs de depop
-	// sous l'eau
+	/**
+	 * Prevent Enderdragon egg to teleport when clicked
+	 * 
+	 * @param BlockFromToEvent
+	 */
 	@EventHandler
 	public void onBlockChange(BlockFromToEvent event) {
 		List<String> blockList = Arrays.asList("TORCH", "WEB");
@@ -191,78 +229,94 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 		}
 	}
 
-	// -------------------------------------------------------
-	// Cycler
+	/**
+	 * Cycle through biomes and metadatas
+	 * 
+	 * @param PlayerInteractEvent
+	 */
 	@EventHandler
 	public void Cycler(PlayerInteractEvent event) {
 		Player p = event.getPlayer();
-		Block b = event.getClickedBlock();
-		if (b != null) {
-			List<Integer> blacklist = getConfig().getIntegerList("cycler-blacklist");
-			// Ajout de la double plante à la blacklist
-			blacklist.add(175);
-			if (p.hasPermission(USE_PERMISSION) && !blacklist.contains(b.getTypeId())) {
-				try {
-					if (getWorldGuard().canBuild(p, b) || p.hasPermission(ADMIN_PERMISSION)) {
-						Byte md = event.getClickedBlock().getData();
-						if (p.isSneaking()) {
-							// Copier
-							if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-								if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
-									biomeCycler.copyBiome(p, b);
-									event.setCancelled(true);
-								}
-								if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
-									metaCycler.copyMeta(p, b);
-									event.setCancelled(true);
-								}
+		/**
+		 * Check if player has permission to use the plugin
+		 */
+		if (p.hasPermission(USE_PERMISSION)) {
+			Block b = event.getClickedBlock();
+			/**
+			 * Check if the clicked block is null or on blacklist
+			 */
+			if (b != null && !cyclerBlacklist.contains(b.getTypeId())) {
+				/**
+				 * Check 3rd party plugins permissions
+				 */
+				if (permsUtils.canBuildAt(p, b.getLocation())) {
+					if (p.isSneaking()) {
+						/**
+						 * Copy
+						 */
+						if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+							if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
+								biomeCycler.copyBiome(p, b);
+								event.setCancelled(true);
 							}
-							// Coller
-							if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-								if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
-									biomeCycler.pasteBiome(p, b);
-									event.setCancelled(true);
-								}
-								if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
-									metaCycler.pasteMeta(p, b);
-									event.setCancelled(true);
-								}
+							if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
+								metaCycler.copyMeta(p, b);
+								event.setCancelled(true);
 							}
-						} else {
-							// En avant
-							if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-								if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
-									biomeCycler.rightClickBlock(p, b);
-									event.setCancelled(true);
-								}
-								if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
-									metaCycler.rightClickBlock(p, b, md);
-									event.setCancelled(true);
-								}
+						}
+						/**
+						 * Paste
+						 */
+						if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+							if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
+								biomeCycler.pasteBiome(p, b);
+								event.setCancelled(true);
 							}
-							// En arrière
-							if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-								if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
-									biomeCycler.leftClickBlock(p, b);
-									event.setCancelled(true);
-								}
-								if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
-									metaCycler.leftClickBlock(p, b, md);
-									event.setCancelled(true);
-								}
+							if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
+								metaCycler.pasteMeta(p, b);
+								event.setCancelled(true);
 							}
 						}
 					} else {
-						p.sendMessage(ChatColor.RED + "You don't have permission to do this here");
+						/**
+						 * Cycling
+						 */
+						if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+							if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
+								biomeCycler.rightClickBlock(p, b);
+								event.setCancelled(true);
+							}
+							if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
+								metaCycler.rightClickBlock(p, b);
+								event.setCancelled(true);
+							}
+						}
+						/**
+						 * Cycling (reverse)
+						 */
+						if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+							if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
+								biomeCycler.leftClickBlock(p, b);
+								event.setCancelled(true);
+							}
+							if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
+								metaCycler.leftClickBlock(p, b);
+								event.setCancelled(true);
+							}
+						}
 					}
-				} catch (Exception e) {
-					e.printStackTrace();
+				} else {
+					p.sendMessage(ChatColor.RED + "You don't have permission to do this here");
 				}
 			}
 		}
 	}
 
-	// Affichage de l'id du bloc lorsqu'on le regarde
+	/**
+	 * Shows block id and metadata when player target it
+	 * 
+	 * @param event
+	 */
 	@EventHandler
 	public void onMove(PlayerMoveEvent event) {
 		ItemStack wand = event.getPlayer().getItemInHand();
@@ -279,7 +333,11 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 		}
 	}
 
-	// Paint Cycler
+	/**
+	 * Right click on a painting
+	 * 
+	 * @param PlayerInteractEntityEvent
+	 */
 	@EventHandler
 	public void rClickPainting(PlayerInteractEntityEvent e) {
 		Player p = e.getPlayer();
@@ -287,10 +345,10 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 			Entity ent = e.getRightClicked();
 			Location loc = ent.getLocation();
 			try {
-				if (getWorldGuard().canBuild(p, loc) || p.hasPermission(ADMIN_PERMISSION)) {
+				if (pluginUtils.getWorldGuard().canBuild(p, loc) || p.hasPermission(ADMIN_PERMISSION)) {
 					if (ent.getType() == EntityType.PAINTING) {
 						if (p.getItemInHand().getType() == metaCycler.getMaterial()) {
-							paintCycler.rClick(ent);
+							paintCycler.rClick((Painting) ent);
 						}
 					}
 				}
@@ -300,6 +358,11 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 		}
 	}
 
+	/**
+	 * Left click on a painting
+	 * 
+	 * @param PaintingBreakByEntityEvent
+	 */
 	@EventHandler
 	public void lClickPainting(PaintingBreakByEntityEvent e) {
 		Player p = (Player) e.getRemover();
@@ -307,7 +370,7 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 			Painting painting = e.getPainting();
 			Location loc = painting.getLocation();
 			try {
-				if (getWorldGuard().canBuild(p, loc) || p.hasPermission(ADMIN_PERMISSION)) {
+				if (pluginUtils.getWorldGuard().canBuild(p, loc) || p.hasPermission(ADMIN_PERMISSION)) {
 					if (p.getItemInHand().getType() == metaCycler.getMaterial()) {
 						paintCycler.lClick(painting);
 						e.setCancelled(true);
@@ -319,7 +382,11 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 		}
 	}
 
-	// Si l'on marche sur une plaque de pression
+	/**
+	 * Cancel default event when player walk on an action plate with metadata
+	 * 
+	 * @param PlayerInteractEvent
+	 */
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onInteract(PlayerInteractEvent event) {
 
@@ -334,7 +401,11 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 		}
 	}
 
-	// Block pick avec metadata
+	/**
+	 * Pick block with metadata
+	 * 
+	 * @param InventoryCreativeEvent
+	 */
 	@EventHandler
 	public void onPick(InventoryCreativeEvent e) {
 		Player p = (Player) e.getInventory().getHolder();
@@ -351,6 +422,11 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 		}
 	}
 
+	/**
+	 * Block place with metadata
+	 * 
+	 * @param BlockPlaceEvent
+	 */
 	@EventHandler
 	public void onBlockPlace(BlockPlaceEvent e) {
 		Player p = e.getPlayer();
@@ -367,16 +443,32 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 		}
 	}
 
+	/**
+	 * Gives the biome tool to the player
+	 * 
+	 * @param player
+	 */
 	public void giveBiomeTool(Player player) {
 		player.setItemInHand(new ItemStack(biomeCycler.getMaterial(), 1));
 		player.playSound(player.getLocation(), Sound.ORB_PICKUP, 1, 1);
 	}
 
+	/**
+	 * Gives the meta tool to the player
+	 * 
+	 * @param player
+	 */
 	public void giveMetaTool(Player player) {
 		player.setItemInHand(new ItemStack(metaCycler.getMaterial(), 1));
 		player.playSound(player.getLocation(), Sound.ORB_PICKUP, 1, 1);
 	}
 
+	/**
+	 * Give a player head to the player
+	 * 
+	 * @param player
+	 * @param headOwner
+	 */
 	public void givePlayerHead(Player player, String headOwner) {
 		ItemStack skull = new ItemStack(397, 1, (short) 3);
 		SkullMeta meta = (SkullMeta) skull.getItemMeta();
@@ -384,6 +476,20 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 		skull.setItemMeta(meta);
 		player.setItemInHand(skull);
 		player.playSound(player.getLocation(), Sound.ORB_PICKUP, 1, 1);
+	}
+
+	/**
+	 * Change the name of the item in the hand of the player
+	 * 
+	 * @param ChatColor
+	 * @param String
+	 * @param Player
+	 */
+	public void setItemInHandName(ChatColor color, String name, Player player) {
+		ItemStack wand = player.getItemInHand();
+		ItemMeta im = wand.getItemMeta();
+		im.setDisplayName(color + name);
+		wand.setItemMeta(im);
 	}
 
 }

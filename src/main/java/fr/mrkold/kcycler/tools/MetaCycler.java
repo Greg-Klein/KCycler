@@ -6,8 +6,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import fr.mrkold.kcycler.KCyclerPlugin;
 
@@ -17,6 +15,10 @@ public class MetaCycler {
 	private KCyclerPlugin plugin;
 	private Material material;
 
+	/**
+	 * Getters & Setters
+	 */
+
 	public Material getMaterial() {
 		return material;
 	}
@@ -25,6 +27,13 @@ public class MetaCycler {
 		this.material = material;
 	}
 
+	/**
+	 * END Getters & Setters
+	 */
+
+	/**
+	 * Constructor
+	 */
 	public MetaCycler(KCyclerPlugin plugin, Material material) {
 		this.plugin = plugin;
 		this.material = material;
@@ -34,24 +43,38 @@ public class MetaCycler {
 		}
 	}
 
-	public void leftClickBlock(Player player, Block b, Byte md) {
-		b.setData((byte) (md - 1));
+	/**
+	 * When player left click on a block it set the metadata to previous one
+	 * 
+	 * @param Player
+	 * @param Block
+	 */
+	public void leftClickBlock(Player player, Block b) {
+		b.setData((byte) (b.getData() - 1));
 		refreshBlock(b);
-		Block block = player.getTargetBlock(null, 5);
-		ItemMeta im = player.getItemInHand().getItemMeta();
-		im.setDisplayName(ChatColor.GREEN + "" + block.getTypeId() + ":" + block.getData());
-		player.getItemInHand().setItemMeta(im);
+		String name = b.getTypeId() + ":" + b.getData();
+		plugin.setItemInHandName(ChatColor.GREEN, name, player);
 	}
 
-	public void rightClickBlock(Player player, Block b, Byte md) {
-		b.setData((byte) (md + 1));
+	/**
+	 * When player right click on a block it set the metadata to next one
+	 * 
+	 * @param Player
+	 * @param Block
+	 */
+	public void rightClickBlock(Player player, Block b) {
+		b.setData((byte) (b.getData() + 1));
 		refreshBlock(b);
-		Block block = player.getTargetBlock(null, 5);
-		ItemMeta im = player.getItemInHand().getItemMeta();
-		im.setDisplayName(ChatColor.GREEN + "" + block.getTypeId() + ":" + block.getData());
-		player.getItemInHand().setItemMeta(im);
+		String name = b.getTypeId() + ":" + b.getData();
+		plugin.setItemInHandName(ChatColor.GREEN, name, player);
 	}
 
+	/**
+	 * Copy given block metadata and store it in data file
+	 * 
+	 * @param Player
+	 * @param Block
+	 */
 	public void copyMeta(Player p, Block b) {
 		String player = p.getName();
 		byte md = b.getData();
@@ -59,12 +82,16 @@ public class MetaCycler {
 		plugin.getPluginConfig().set(player + ".block", mat);
 		plugin.getPluginConfig().set(player + ".meta", md);
 		saveData();
-		ItemStack wand = p.getItemInHand();
-		ItemMeta im = wand.getItemMeta();
-		im.setDisplayName(ChatColor.GOLD + "" + mat.toString() + ":" + md);
-		wand.setItemMeta(im);
+		String name = mat.toString() + ":" + md;
+		plugin.setItemInHandName(ChatColor.GOLD, name, p);
 	}
 
+	/**
+	 * Paste the metadata stored in data file to targeted block
+	 * 
+	 * @param Player
+	 * @param Block
+	 */
 	public void pasteMeta(Player p, Block b) {
 		String player = p.getName();
 		Integer matint = plugin.getPluginConfig().getInt(player + ".block");
@@ -80,6 +107,9 @@ public class MetaCycler {
 		}
 	}
 
+	/**
+	 * Save data to file
+	 */
 	private void saveData() {
 		try {
 			plugin.getPluginConfig().save(plugin.getDataFile());
@@ -88,6 +118,11 @@ public class MetaCycler {
 		}
 	}
 
+	/**
+	 * Refresh teh given block
+	 * 
+	 * @param Block
+	 */
 	private void refreshBlock(Block b) {
 		b.getState().update(true);
 	}
