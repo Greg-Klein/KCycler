@@ -59,7 +59,7 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 	private CommandManager commandHandler;
 	private PluginUtils pluginUtils;
 	private PermissionsUtils permsUtils;
-	private String updateMessage = "";
+	private String updateMessage;
 	private List<Integer> cyclerBlacklist;
 
 	/**
@@ -319,16 +319,19 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 	 */
 	@EventHandler
 	public void onMove(PlayerMoveEvent event) {
-		ItemStack wand = event.getPlayer().getItemInHand();
-		if (wand.getType() == metaCycler.getMaterial()) {
-			Block b = event.getPlayer().getTargetBlock(null, 10);
-			int id = b.getTypeId();
-			if (id != 0) {
-				byte mdb = b.getData();
-				int md = mdb;
-				ItemMeta im = wand.getItemMeta();
-				im.setDisplayName(ChatColor.GREEN.toString() + id + ":" + md);
-				wand.setItemMeta(im);
+		Player p = event.getPlayer();
+		if (p.hasPermission(USE_PERMISSION)) {
+			ItemStack wand = event.getPlayer().getItemInHand();
+			if (wand.getType() == metaCycler.getMaterial()) {
+				Block b = event.getPlayer().getTargetBlock(null, 10);
+				int id = b.getTypeId();
+				if (id != 0) {
+					byte mdb = b.getData();
+					int md = mdb;
+					ItemMeta im = wand.getItemMeta();
+					im.setDisplayName(ChatColor.GREEN.toString() + id + ":" + md);
+					wand.setItemMeta(im);
+				}
 			}
 		}
 	}
@@ -389,7 +392,6 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 	 */
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onInteract(PlayerInteractEvent event) {
-
 		if (event.getAction() == Action.PHYSICAL) {
 			if ((event.getClickedBlock().getType().toString().contains("PLATE"))) {
 				byte metadata = event.getClickedBlock().getData();

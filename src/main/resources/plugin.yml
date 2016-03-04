@@ -1,9 +1,8 @@
 name: KCycler
 main: fr.mrkold.kcycler.KCyclerPlugin
-version: '1.1.4'
+version: "${project.version}"
 author: MrKold
-depend: [WorldGuard]
-softdepend: [PlotMe]
+softdepend: [WorldGuard]
 commands:
     mt:
       description: Give MetaTool

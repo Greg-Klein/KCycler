@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>fr.mrkold</groupId>
   <artifactId>KCycler</artifactId>
-  <version>1.1.4-SNAPSHOT</version>
+  <version>1.1.4</version>
   <name>KCycler</name>
   <build>
     <plugins>
@@ -15,6 +15,16 @@
         </configuration>
       </plugin>
     </plugins>
+    <resources>
+	    <resource>
+	      <targetPath>.</targetPath>
+	      <filtering>true</filtering>
+	      <directory>${basedir}/src/main/resources/</directory>
+	      <includes>
+	        <include>plugin.yml</include>
+	      </includes>
+	    </resource>
+	 </resources>
   </build>
   <repositories>
   	<repository>
