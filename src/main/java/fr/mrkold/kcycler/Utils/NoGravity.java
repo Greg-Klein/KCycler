@@ -14,10 +14,10 @@ public class NoGravity {
 	 * @param BlockPhysicsEvent
 	 */
 	public static void cancelGravity(Plugin plugin, BlockPhysicsEvent event) {
-		String bloc = event.getBlock().getType().toString();
-		List<String> liste = plugin.getConfig().getStringList("antigravity");
+		String block = event.getBlock().getType().toString();
+		List<String> affectedBlocksList = plugin.getConfig().getStringList("antigravity");
 
-		if (liste.contains(bloc)) {
+		if (affectedBlocksList.contains(block)) {
 			event.setCancelled(true);
 		}
 	}

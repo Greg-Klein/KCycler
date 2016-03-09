@@ -8,9 +8,14 @@ import com.intellectualcrafters.plot.object.Plot;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 
 import fr.mrkold.kcycler.KCyclerPlugin;
-import fr.mrkold.kcycler.PluginConstants;
 
-public class PermissionsUtils implements PluginConstants {
+public class PermissionsUtils {
+
+	/**
+	 * Permissions
+	 */
+	public final static String USE_PERMISSION = "kcycler.use";
+	public final static String ADMIN_PERMISSION = "kcycler.admin";
 
 	KCyclerPlugin plugin;
 	PluginUtils pluginUtils;
@@ -24,12 +29,19 @@ public class PermissionsUtils implements PluginConstants {
 		plotsquared = pluginUtils.getPlotSquared();
 	}
 
-	public boolean canBuildAt(Player player, Location location) {
+	public boolean canUseAt(Player player, Location location) {
 		/**
 		 * Return true if player has admin permission
 		 */
 		if (player.hasPermission(ADMIN_PERMISSION)) {
 			return true;
+		}
+
+		/**
+		 * Return false if player do not have use permission
+		 */
+		if (!player.hasPermission(USE_PERMISSION)) {
+			return false;
 		}
 
 		/**

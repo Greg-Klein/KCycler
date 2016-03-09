@@ -11,7 +11,7 @@ public class PaintCycler {
 	 * 
 	 * @param ent
 	 */
-	public void rClick(Painting painting) {
+	public void rightClick(Painting painting) {
 		int paintingID = painting.getArt().getId();
 		int pID = ++paintingID;
 		if (pID > 25) {
@@ -25,7 +25,7 @@ public class PaintCycler {
 	 * 
 	 * @param painting
 	 */
-	public void lClick(Painting painting) {
+	public void leftClick(Painting painting) {
 		int paintingID = painting.getArt().getId();
 		int pID = --paintingID;
 		if (pID < 0) {
