@@ -47,15 +47,15 @@ import fr.mrkold.kcycler.tools.PaintCycler;
 import update.checker.UpdateChecker;
 
 @SuppressWarnings("deprecation")
-public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstants {
+public class KCyclerPlugin extends JavaPlugin implements Listener {
 
-	private PluginDescriptionFile pluginDescription;
+	public final static String DATA_FILE_NAME = "data.yml";
+
 	private File dataFile;
 	private FileConfiguration pluginConfig;
 	private BiomeCycler biomeCycler;
 	private MetaCycler metaCycler;
 	private PaintCycler paintCycler;
-	private CommandManager commandHandler;
 	private PluginUtils pluginUtils;
 	private PermissionsUtils permsUtils;
 	private String updateMessage;
@@ -115,10 +115,10 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 		/**
 		 * Commands
 		 */
-		commandHandler = new CommandManager(this);
-		getCommand(BIOMETOOL_COMMAND).setExecutor(commandHandler);
-		getCommand(METATOOL_COMMAND).setExecutor(commandHandler);
-		getCommand(PLAYERHEAD_COMMAND).setExecutor(commandHandler);
+		CommandManager commandHandler = new CommandManager(this);
+		getCommand(CommandManager.BIOMETOOL_COMMAND).setExecutor(commandHandler);
+		getCommand(CommandManager.METATOOL_COMMAND).setExecutor(commandHandler);
+		getCommand(CommandManager.PLAYERHEAD_COMMAND).setExecutor(commandHandler);
 
 		/**
 		 * Create config
@@ -163,7 +163,7 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 		/**
 		 * Check for new version
 		 */
-		pluginDescription = this.getDescription();
+		PluginDescriptionFile pluginDescription = this.getDescription();
 		updateMessage = UpdateChecker.checkVersion(pluginDescription);
 		if (!updateMessage.isEmpty()) {
 			Bukkit.getServer().getConsoleSender().sendMessage(updateMessage);
@@ -183,6 +183,7 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 
 	@Override
 	public void onDisable() {
+		PluginDescriptionFile pluginDescription = this.getDescription();
 		getLogger().info(pluginDescription.getName() + " v" + pluginDescription.getVersion() + " disabled");
 	}
 

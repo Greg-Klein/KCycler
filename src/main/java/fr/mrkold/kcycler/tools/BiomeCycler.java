@@ -11,11 +11,12 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import fr.mrkold.kcycler.KCyclerPlugin;
-import fr.mrkold.kcycler.PluginConstants;
 import fr.mrkold.kcycler.Utils.PluginUtils;
 
 @SuppressWarnings("deprecation")
-public class BiomeCycler implements PluginConstants {
+public class BiomeCycler {
+
+	public final static Material DEFAULT_BIOMECYCLER_MATERIAL = Material.BLAZE_ROD;
 
 	private KCyclerPlugin plugin;
 	private Material material;

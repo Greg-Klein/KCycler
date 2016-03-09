@@ -45,6 +45,7 @@
 	  <groupId>com.intellectualcrafters</groupId>
 	  <artifactId>plotsquared</artifactId>
 	  <version>3.2.27</version>
+	  <scope>provided</scope>
 	</dependency>
     <!-- WorldGuard API -->
     <dependency>

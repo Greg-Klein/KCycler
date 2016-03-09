@@ -8,7 +8,14 @@ import org.bukkit.entity.Player;
 
 import fr.mrkold.kcycler.Utils.PermissionsUtils;
 
-public class CommandManager implements CommandExecutor, PluginConstants {
+public class CommandManager implements CommandExecutor {
+
+	/**
+	 * Commands
+	 */
+	public final static String BIOMETOOL_COMMAND = "bt";
+	public final static String METATOOL_COMMAND = "mt";
+	public final static String PLAYERHEAD_COMMAND = "ph";
 
 	private KCyclerPlugin plugin;
 

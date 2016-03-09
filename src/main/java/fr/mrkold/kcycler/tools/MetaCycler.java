@@ -6,11 +6,12 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import fr.mrkold.kcycler.KCyclerPlugin;
-import fr.mrkold.kcycler.PluginConstants;
 import fr.mrkold.kcycler.Utils.PluginUtils;
 
 @SuppressWarnings("deprecation")
-public class MetaCycler implements PluginConstants {
+public class MetaCycler {
+
+	public final static Material DEFAULT_METACYCLER_MATERIAL = Material.STICK;
 
 	private KCyclerPlugin plugin;
 	private Material material;

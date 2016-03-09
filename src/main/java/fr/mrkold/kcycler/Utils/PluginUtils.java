@@ -11,9 +11,14 @@ import com.intellectualcrafters.plot.api.PlotAPI;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 
 import fr.mrkold.kcycler.KCyclerPlugin;
-import fr.mrkold.kcycler.PluginConstants;
 
-public class PluginUtils implements PluginConstants {
+public class PluginUtils {
+
+	/**
+	 * 3rd party plugins
+	 */
+	public final static String WORLDGUARD_PLUGIN_NAME = "WorldGuard";
+	public final static String PLOTSQUARED_PLUGIN_NAME = "PlotSquared";
 
 	private KCyclerPlugin plugin;
 
