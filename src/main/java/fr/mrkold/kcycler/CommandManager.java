@@ -6,6 +6,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import fr.mrkold.kcycler.Utils.PermissionsUtils;
+
 public class CommandManager implements CommandExecutor, PluginConstants {
 
 	private KCyclerPlugin plugin;
@@ -17,26 +19,28 @@ public class CommandManager implements CommandExecutor, PluginConstants {
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		if (sender instanceof Player) {
-			Player p = (Player) sender;
-			if (p.hasPermission(USE_PERMISSION)) {
+			Player player = (Player) sender;
+			if (player.hasPermission(PermissionsUtils.USE_PERMISSION)) {
 				if (label.equalsIgnoreCase(METATOOL_COMMAND)) {
-					plugin.giveMetaTool(p);
+					plugin.giveMetaTool(player);
 				}
 				if (label.equalsIgnoreCase(BIOMETOOL_COMMAND)) {
-					plugin.giveBiomeTool(p);
+					plugin.giveBiomeTool(player);
 				}
 				if (label.equalsIgnoreCase(PLAYERHEAD_COMMAND)) {
 					if (args.length != 1) {
-						p.sendMessage(ChatColor.RED + "Usage: /" + PLAYERHEAD_COMMAND + " <PlayerName>");
+						player.sendMessage(ChatColor.RED + "Usage: /" + PLAYERHEAD_COMMAND + " <PlayerName>");
 					} else {
 						String a0 = args[0];
-						plugin.givePlayerHead(p, a0);
+						plugin.givePlayerHead(player, a0);
 					}
 				}
 			} else {
-				p.sendMessage(
-						ChatColor.AQUA + "You don't have permission to use this command. (" + USE_PERMISSION + ")");
+				player.sendMessage(ChatColor.AQUA + "You don't have permission to use this command. ("
+						+ PermissionsUtils.USE_PERMISSION + ")");
 			}
+		} else {
+			plugin.getLogger().warning("Only players can perform this command");
 		}
 		return false;
 	}

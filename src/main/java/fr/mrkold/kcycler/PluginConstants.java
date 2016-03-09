@@ -1,12 +1,14 @@
 package fr.mrkold.kcycler;
 
+import org.bukkit.Material;
+
 public interface PluginConstants {
 
 	/**
-	 * Permissions
+	 * Default materials
 	 */
-	public final static String USE_PERMISSION = "kcycler.use";
-	public final static String ADMIN_PERMISSION = "kcycler.admin";
+	public final static Material DEFAULT_METACYCLER_MATERIAL = Material.STICK;
+	public final static Material DEFAULT_BIOMECYCLER_MATERIAL = Material.BLAZE_ROD;
 
 	/**
 	 * Files

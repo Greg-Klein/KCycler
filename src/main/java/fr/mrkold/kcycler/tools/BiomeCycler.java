@@ -1,11 +1,9 @@
 package fr.mrkold.kcycler.tools;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
@@ -13,9 +11,11 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import fr.mrkold.kcycler.KCyclerPlugin;
+import fr.mrkold.kcycler.PluginConstants;
+import fr.mrkold.kcycler.Utils.PluginUtils;
 
 @SuppressWarnings("deprecation")
-public class BiomeCycler {
+public class BiomeCycler implements PluginConstants {
 
 	private KCyclerPlugin plugin;
 	private Material material;
@@ -41,12 +41,12 @@ public class BiomeCycler {
 	/**
 	 * Constructor
 	 */
-	public BiomeCycler(KCyclerPlugin plugin, Material material) {
+	public BiomeCycler(KCyclerPlugin plugin) {
 		this.plugin = plugin;
-		this.material = material;
-		Integer bt = plugin.getConfig().getInt("biome-tool");
-		if (bt != 0) {
-			material = Material.getMaterial(bt);
+		this.material = DEFAULT_BIOMECYCLER_MATERIAL;
+		Integer biomeTool = plugin.getConfig().getInt("biome-tool");
+		if (biomeTool != 0) {
+			material = Material.getMaterial(biomeTool);
 		}
 	}
 
@@ -55,8 +55,8 @@ public class BiomeCycler {
 	 * @param Biome
 	 * @return Return the next biome
 	 */
-	private Biome getNextBiome(Biome b) {
-		int i = biomes.indexOf(b) + 1;
+	private Biome getNextBiome(Biome biome) {
+		int i = biomes.indexOf(biome) + 1;
 		if (i >= maxBiome) {
 			i = 0;
 		}
@@ -68,8 +68,8 @@ public class BiomeCycler {
 	 * @param Biome
 	 * @return Return the previous biome
 	 */
-	private Biome getPreviousBiome(Biome b) {
-		int i = biomes.indexOf(b) - 1;
+	private Biome getPreviousBiome(Biome biome) {
+		int i = biomes.indexOf(biome) - 1;
 		if (i <= 0) {
 			i = maxBiome;
 		}
@@ -82,9 +82,9 @@ public class BiomeCycler {
 	 * @return Return biome corresponding to given name
 	 */
 	private Biome getBiome(String biome) {
-		for (Biome b : biomes) {
-			if (b.equals(b.toString())) {
-				return b;
+		for (Biome currentBiome : biomes) {
+			if (biome.equals(currentBiome.toString())) {
+				return currentBiome;
 			}
 		}
 		return null;
@@ -96,11 +96,11 @@ public class BiomeCycler {
 	 * @param Block
 	 * @param Biome
 	 */
-	private void setBiome(Block b, Biome bi) {
-		if (bi != null) {
-			World world = b.getWorld();
-			world.setBiome(b.getX(), b.getZ(), bi);
-			refreshChunk(b);
+	private void setBiome(Block block, Biome biome) {
+		if (biome != null) {
+			World world = block.getWorld();
+			world.setBiome(block.getX(), block.getZ(), biome);
+			PluginUtils.refreshChunk(block);
 		}
 	}
 
@@ -110,9 +110,9 @@ public class BiomeCycler {
 	 * @param Player
 	 * @param Block
 	 */
-	public void leftClickBlock(Player p, Block b) {
-		plugin.setItemInHandName(ChatColor.GREEN, getPreviousBiome(b.getBiome()).name(), p);
-		setBiome(b, getPreviousBiome(b.getBiome()));
+	public void leftClickBlock(Player player, Block block) {
+		plugin.setItemInHandName(ChatColor.GREEN, getPreviousBiome(block.getBiome()).name(), player);
+		setBiome(block, getPreviousBiome(block.getBiome()));
 	}
 
 	/**
@@ -121,9 +121,9 @@ public class BiomeCycler {
 	 * @param Player
 	 * @param Block
 	 */
-	public void rightClickBlock(Player p, Block b) {
-		plugin.setItemInHandName(ChatColor.GREEN, getNextBiome(b.getBiome()).name(), p);
-		setBiome(b, getNextBiome(b.getBiome()));
+	public void rightClickBlock(Player player, Block block) {
+		plugin.setItemInHandName(ChatColor.GREEN, getNextBiome(block.getBiome()).name(), player);
+		setBiome(block, getNextBiome(block.getBiome()));
 	}
 
 	/**
@@ -132,12 +132,12 @@ public class BiomeCycler {
 	 * @param Player
 	 * @param Block
 	 */
-	public void copyBiome(Player p, Block b) {
-		String player = p.getName();
-		String bi = b.getBiome().name();
-		plugin.getPluginConfig().set(player + ".biome", bi);
-		saveData();
-		plugin.setItemInHandName(ChatColor.GOLD, b.getBiome().name(), p);
+	public void copyBiome(Player player, Block block) {
+		String playerName = player.getName();
+		String biomeName = block.getBiome().name();
+		plugin.getPluginConfig().set(playerName + ".biome", biomeName);
+		PluginUtils.saveData(plugin);
+		plugin.setItemInHandName(ChatColor.GOLD, block.getBiome().name(), player);
 	}
 
 	/**
@@ -146,36 +146,14 @@ public class BiomeCycler {
 	 * @param Player
 	 * @param Block
 	 */
-	public void pasteBiome(Player p, Block b) {
-		String player = p.getName();
-		String storedBiome = plugin.getPluginConfig().getString(player + ".biome");
+	public void pasteBiome(Player player, Block block) {
+		String playerName = player.getName();
+		String storedBiome = plugin.getPluginConfig().getString(playerName + ".biome");
 		if (storedBiome == null || storedBiome.isEmpty()) {
-			p.sendMessage(ChatColor.RED + "Copy a biome first");
+			player.sendMessage(ChatColor.RED + "Copy a biome first");
 		} else {
 			Biome biome = getBiome(storedBiome);
-			setBiome(b, biome);
+			setBiome(block, biome);
 		}
-	}
-
-	/**
-	 * Save data to file
-	 */
-	private void saveData() {
-		try {
-			plugin.getPluginConfig().save(plugin.getDataFile());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Refresh the chunk where stands the given block
-	 * 
-	 * @param Block
-	 */
-	private void refreshChunk(Block b) {
-		World w = b.getWorld();
-		Chunk c = b.getChunk();
-		w.refreshChunk(c.getX(), c.getZ());
 	}
 }

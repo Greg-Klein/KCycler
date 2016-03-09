@@ -14,7 +14,6 @@ import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Painting;
 import org.bukkit.entity.Player;
@@ -101,16 +100,22 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 		}
 
 		/**
-		 * Initialisation
+		 * Tools
 		 */
-		biomeCycler = new BiomeCycler(this, Material.BLAZE_ROD);
-		metaCycler = new MetaCycler(this, Material.STICK);
+		biomeCycler = new BiomeCycler(this);
+		metaCycler = new MetaCycler(this);
 		paintCycler = new PaintCycler();
-		commandHandler = new CommandManager(this);
+
+		/**
+		 * Utils
+		 */
 		pluginUtils = new PluginUtils(this);
 		permsUtils = new PermissionsUtils(this);
-		pluginDescription = this.getDescription();
 
+		/**
+		 * Commands
+		 */
+		commandHandler = new CommandManager(this);
 		getCommand(BIOMETOOL_COMMAND).setExecutor(commandHandler);
 		getCommand(METATOOL_COMMAND).setExecutor(commandHandler);
 		getCommand(PLAYERHEAD_COMMAND).setExecutor(commandHandler);
@@ -138,17 +143,17 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 		/**
 		 * Create blocks list file
 		 */
-		File matList = new File(getDataFolder(), "Material_List.txt");
-		if (!matList.exists()) {
+		File materialList = new File(getDataFolder(), "Material_List.txt");
+		if (!materialList.exists()) {
 			Material[] materials = Material.class.getEnumConstants();
 			try {
-				FileWriter fw = new FileWriter(matList);
-				fw.write("NAME - ID\n----------\n");
-				for (Material m : materials) {
-					fw.write(m.toString() + " - " + m.getId() + "\n");
+				FileWriter fileWriter = new FileWriter(materialList);
+				fileWriter.write("NAME - ID\n----------\n");
+				for (Material material : materials) {
+					fileWriter.write(material.toString() + " - " + material.getId() + "\n");
 				}
-				fw.close();
-				matList.createNewFile();
+				fileWriter.close();
+				materialList.createNewFile();
 			} catch (IOException e) {
 				getLogger().warning("Failed to write material list file");
 				e.printStackTrace();
@@ -158,8 +163,9 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 		/**
 		 * Check for new version
 		 */
+		pluginDescription = this.getDescription();
 		updateMessage = UpdateChecker.checkVersion(pluginDescription);
-		if (!updateMessage.equals("")) {
+		if (!updateMessage.isEmpty()) {
 			Bukkit.getServer().getConsoleSender().sendMessage(updateMessage);
 		}
 
@@ -186,10 +192,10 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 	 * @param PlayerJoinEvent
 	 */
 	@EventHandler
-	public void onJoin(PlayerJoinEvent e) {
-		if (e.getPlayer().isOp()) {
+	public void onJoin(PlayerJoinEvent event) {
+		if (event.getPlayer().isOp()) {
 			if (!updateMessage.equalsIgnoreCase("")) {
-				e.getPlayer().sendMessage(updateMessage);
+				event.getPlayer().sendMessage(updateMessage);
 			}
 		}
 	}
@@ -216,15 +222,15 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 	}
 
 	/**
-	 * Prevent Enderdragon egg to teleport when clicked
+	 * Prevent Enderdragon egg to teleport when clicked and torch/web to break
+	 * under water
 	 * 
 	 * @param BlockFromToEvent
 	 */
 	@EventHandler
 	public void onBlockChange(BlockFromToEvent event) {
-		List<String> blockList = Arrays.asList("TORCH", "WEB");
-		if (blockList.contains(event.getToBlock().getType().toString())
-				|| event.getBlock().getType() == Material.DRAGON_EGG) {
+		List<Material> blockList = Arrays.asList(Material.TORCH, Material.WEB, Material.DRAGON_EGG);
+		if (blockList.contains(event.getBlock().getType())) {
 			event.setCancelled(true);
 		}
 	}
@@ -236,78 +242,81 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 	 */
 	@EventHandler
 	public void Cycler(PlayerInteractEvent event) {
-		Player p = event.getPlayer();
+		Player player = event.getPlayer();
+		Block block = event.getClickedBlock();
 		/**
-		 * Check if player has permission to use the plugin
+		 * Check if the clicked block is null
 		 */
-		if (p.hasPermission(USE_PERMISSION)) {
-			Block b = event.getClickedBlock();
+		if (block != null) {
 			/**
-			 * Check if the clicked block is null or on blacklist
+			 * Check 3rd party plugins permissions
 			 */
-			if (b != null && !cyclerBlacklist.contains(b.getTypeId())) {
-				/**
-				 * Check 3rd party plugins permissions
-				 */
-				if (permsUtils.canBuildAt(p, b.getLocation())) {
-					if (p.isSneaking()) {
-						/**
-						 * Copy
-						 */
-						if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-							if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
-								biomeCycler.copyBiome(p, b);
-								event.setCancelled(true);
-							}
-							if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
-								metaCycler.copyMeta(p, b);
-								event.setCancelled(true);
-							}
+			if (permsUtils.canUseAt(player, block.getLocation())) {
+				if (player.isSneaking()) {
+					/**
+					 * Copy
+					 */
+					if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+						if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
+							biomeCycler.copyBiome(player, block);
+							event.setCancelled(true);
 						}
-						/**
-						 * Paste
-						 */
-						if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-							if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
-								biomeCycler.pasteBiome(p, b);
-								event.setCancelled(true);
+						if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
+							if (!cyclerBlacklist.contains(block.getTypeId())) {
+								metaCycler.copyMeta(player, block);
 							}
-							if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
-								metaCycler.pasteMeta(p, b);
-								event.setCancelled(true);
-							}
+							event.setCancelled(true);
 						}
-					} else {
-						/**
-						 * Cycling
-						 */
-						if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-							if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
-								biomeCycler.rightClickBlock(p, b);
-								event.setCancelled(true);
-							}
-							if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
-								metaCycler.rightClickBlock(p, b);
-								event.setCancelled(true);
-							}
+					}
+					/**
+					 * Paste
+					 */
+					if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+						if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
+							biomeCycler.pasteBiome(player, block);
+							event.setCancelled(true);
 						}
-						/**
-						 * Cycling (reverse)
-						 */
-						if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-							if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
-								biomeCycler.leftClickBlock(p, b);
-								event.setCancelled(true);
-							}
-							if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
-								metaCycler.leftClickBlock(p, b);
-								event.setCancelled(true);
-							}
+						if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
+							metaCycler.pasteMeta(player, block);
+							event.setCancelled(true);
 						}
 					}
 				} else {
-					p.sendMessage(ChatColor.RED + "You don't have permission to do this here");
+					/**
+					 * Cycling
+					 */
+					if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+						if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
+							biomeCycler.rightClickBlock(player, block);
+							event.setCancelled(true);
+						}
+						if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
+							if (!cyclerBlacklist.contains(block.getTypeId())) {
+								metaCycler.rightClickBlock(player, block);
+							}
+							event.setCancelled(true);
+						}
+					}
+					/**
+					 * Cycling (reverse)
+					 */
+					if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
+						if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
+							biomeCycler.leftClickBlock(player, block);
+							event.setCancelled(true);
+						}
+						if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
+							if (!cyclerBlacklist.contains(block.getTypeId())) {
+								metaCycler.leftClickBlock(player, block);
+							}
+							event.setCancelled(true);
+						}
+					}
 				}
+			} else if (player.hasPermission(PermissionsUtils.USE_PERMISSION)) {
+				// If player has use permission but no permission to use KCycler
+				// here
+				player.sendMessage(ChatColor.RED + "You don't have permission to do this here");
 			}
 		}
 	}
@@ -319,18 +328,16 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 	 */
 	@EventHandler
 	public void onMove(PlayerMoveEvent event) {
-		Player p = event.getPlayer();
-		if (p.hasPermission(USE_PERMISSION)) {
-			ItemStack wand = event.getPlayer().getItemInHand();
-			if (wand.getType() == metaCycler.getMaterial()) {
-				Block b = event.getPlayer().getTargetBlock(null, 10);
-				int id = b.getTypeId();
-				if (id != 0) {
-					byte mdb = b.getData();
-					int md = mdb;
-					ItemMeta im = wand.getItemMeta();
-					im.setDisplayName(ChatColor.GREEN.toString() + id + ":" + md);
-					wand.setItemMeta(im);
+		Player player = event.getPlayer();
+		if (player.hasPermission(PermissionsUtils.USE_PERMISSION)) {
+			ItemStack itemInHand = event.getPlayer().getItemInHand();
+			if (itemInHand.getType() == metaCycler.getMaterial()) {
+				Block block = event.getPlayer().getTargetBlock(null, 10);
+				int blockId = block.getTypeId();
+				if (blockId != 0) {
+					int blockMetadata = block.getData();
+					String name = blockId + ":" + blockMetadata;
+					setItemInHandName(ChatColor.GREEN, name, player);
 				}
 			}
 		}
@@ -342,21 +349,15 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 	 * @param PlayerInteractEntityEvent
 	 */
 	@EventHandler
-	public void rClickPainting(PlayerInteractEntityEvent e) {
-		Player p = e.getPlayer();
-		if (p.hasPermission(USE_PERMISSION)) {
-			Entity ent = e.getRightClicked();
-			Location loc = ent.getLocation();
-			try {
-				if (pluginUtils.getWorldGuard().canBuild(p, loc) || p.hasPermission(ADMIN_PERMISSION)) {
-					if (ent.getType() == EntityType.PAINTING) {
-						if (p.getItemInHand().getType() == metaCycler.getMaterial()) {
-							paintCycler.rClick((Painting) ent);
-						}
-					}
+	public void rClickPainting(PlayerInteractEntityEvent event) {
+		Player player = event.getPlayer();
+		Painting clickedPainting = (Painting) event.getRightClicked();
+		Location paintingLocation = clickedPainting.getLocation();
+		if (permsUtils.canUseAt(player, paintingLocation)) {
+			if (clickedPainting.getType() == EntityType.PAINTING) {
+				if (player.getItemInHand().getType() == metaCycler.getMaterial()) {
+					paintCycler.rightClick(clickedPainting);
 				}
-			} catch (Exception e1) {
-				e1.printStackTrace();
 			}
 		}
 	}
@@ -367,20 +368,14 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 	 * @param PaintingBreakByEntityEvent
 	 */
 	@EventHandler
-	public void lClickPainting(PaintingBreakByEntityEvent e) {
-		Player p = (Player) e.getRemover();
-		if (p.hasPermission(USE_PERMISSION)) {
-			Painting painting = e.getPainting();
-			Location loc = painting.getLocation();
-			try {
-				if (pluginUtils.getWorldGuard().canBuild(p, loc) || p.hasPermission(ADMIN_PERMISSION)) {
-					if (p.getItemInHand().getType() == metaCycler.getMaterial()) {
-						paintCycler.lClick(painting);
-						e.setCancelled(true);
-					}
-				}
-			} catch (Exception e1) {
-				e1.printStackTrace();
+	public void lClickPainting(PaintingBreakByEntityEvent event) {
+		Player player = (Player) event.getRemover();
+		Painting clickedPainting = event.getPainting();
+		Location paintingLocation = clickedPainting.getLocation();
+		if (permsUtils.canUseAt(player, paintingLocation)) {
+			if (player.getItemInHand().getType() == metaCycler.getMaterial()) {
+				paintCycler.leftClick(clickedPainting);
+				event.setCancelled(true);
 			}
 		}
 	}
@@ -409,18 +404,17 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 	 * @param InventoryCreativeEvent
 	 */
 	@EventHandler
-	public void onPick(InventoryCreativeEvent e) {
-		Player p = (Player) e.getInventory().getHolder();
-		Block b = p.getTargetBlock(null, 5);
-		List<Integer> puBl = getConfig().getIntegerList("pick-blacklist");
-		if (p.isSneaking() && !puBl.contains(b.getTypeId())) {
-			byte metadata = p.getTargetBlock(null, 5).getData();
-			Material mat = e.getCursor().getType();
-			ItemStack item = new ItemStack(mat, 1);
-			ItemMeta im = item.getItemMeta();
-			im.setDisplayName(ChatColor.GREEN + "" + mat.getId() + ":" + metadata);
-			item.setItemMeta(im);
-			e.setCursor(item);
+	public void onPick(InventoryCreativeEvent event) {
+		Player player = (Player) event.getInventory().getHolder();
+		Block block = player.getTargetBlock(null, 10);
+		List<Integer> pickupBlacklist = getConfig().getIntegerList("pick-blacklist");
+		if (player.isSneaking() && !pickupBlacklist.contains(block.getTypeId())) {
+			byte metadata = player.getTargetBlock(null, 10).getData();
+			Material material = event.getCursor().getType();
+			ItemStack item = new ItemStack(material, 1);
+			String name = material.getId() + ":" + metadata;
+			setItemInHandName(ChatColor.GREEN, name, player);
+			event.setCursor(item);
 		}
 	}
 
@@ -430,15 +424,14 @@ public class KCyclerPlugin extends JavaPlugin implements Listener, PluginConstan
 	 * @param BlockPlaceEvent
 	 */
 	@EventHandler
-	public void onBlockPlace(BlockPlaceEvent e) {
-		Player p = e.getPlayer();
-		String name = p.getItemInHand().getItemMeta().getDisplayName();
+	public void onBlockPlace(BlockPlaceEvent event) {
+		Player player = event.getPlayer();
+		String itemName = player.getItemInHand().getItemMeta().getDisplayName();
 		try {
-			String[] tab = name.split(":");
-			if (tab[1] != null) {
-				int mdint = Integer.parseInt(tab[1]);
-				byte md = (byte) mdint;
-				e.getBlockPlaced().setData(md);
+			String[] itemNameArray = itemName.split(":");
+			if (itemNameArray[1] != null) {
+				byte metadata = Byte.parseByte(itemNameArray[1]);
+				event.getBlockPlaced().setData(metadata);
 			}
 		} catch (Exception exception) {
 			// Ne rien faire

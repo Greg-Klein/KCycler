@@ -1,5 +1,10 @@
 package fr.mrkold.kcycler.Utils;
 
+import java.io.IOException;
+
+import org.bukkit.Chunk;
+import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.plugin.Plugin;
 
 import com.intellectualcrafters.plot.api.PlotAPI;
@@ -43,6 +48,37 @@ public class PluginUtils implements PluginConstants {
 			api = new PlotAPI();
 		}
 		return api;
+	}
+
+	/**
+	 * Save data to file
+	 */
+	public static void saveData(KCyclerPlugin plugin) {
+		try {
+			plugin.getPluginConfig().save(plugin.getDataFile());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Refresh the given block
+	 * 
+	 * @param Block
+	 */
+	public static void refreshBlock(Block block) {
+		block.getState().update(true);
+	}
+
+	/**
+	 * Refresh the chunk where stands the given block
+	 * 
+	 * @param Block
+	 */
+	public static void refreshChunk(Block block) {
+		World world = block.getWorld();
+		Chunk chunk = block.getChunk();
+		world.refreshChunk(chunk.getX(), chunk.getZ());
 	}
 
 }
