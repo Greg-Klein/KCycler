@@ -11,11 +11,12 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import fr.mrkold.kcycler.KCyclerPlugin;
-import fr.mrkold.kcycler.PluginConstants;
-import fr.mrkold.kcycler.Utils.PluginUtils;
+import fr.mrkold.kcycler.utils.PluginUtils;
 
 @SuppressWarnings("deprecation")
-public class BiomeCycler implements PluginConstants {
+public class BiomeCycler {
+
+	public final static Material DEFAULT_BIOMECYCLER_MATERIAL = Material.BLAZE_ROD;
 
 	private KCyclerPlugin plugin;
 	private Material material;
@@ -111,7 +112,7 @@ public class BiomeCycler implements PluginConstants {
 	 * @param Block
 	 */
 	public void leftClickBlock(Player player, Block block) {
-		plugin.setItemInHandName(ChatColor.GREEN, getPreviousBiome(block.getBiome()).name(), player);
+		plugin.getPluginUtils().setItemInHandName(ChatColor.GREEN, getPreviousBiome(block.getBiome()).name(), player);
 		setBiome(block, getPreviousBiome(block.getBiome()));
 	}
 
@@ -122,7 +123,7 @@ public class BiomeCycler implements PluginConstants {
 	 * @param Block
 	 */
 	public void rightClickBlock(Player player, Block block) {
-		plugin.setItemInHandName(ChatColor.GREEN, getNextBiome(block.getBiome()).name(), player);
+		plugin.getPluginUtils().setItemInHandName(ChatColor.GREEN, getNextBiome(block.getBiome()).name(), player);
 		setBiome(block, getNextBiome(block.getBiome()));
 	}
 
@@ -137,7 +138,7 @@ public class BiomeCycler implements PluginConstants {
 		String biomeName = block.getBiome().name();
 		plugin.getPluginConfig().set(playerName + ".biome", biomeName);
 		PluginUtils.saveData(plugin);
-		plugin.setItemInHandName(ChatColor.GOLD, block.getBiome().name(), player);
+		plugin.getPluginUtils().setItemInHandName(ChatColor.GOLD, block.getBiome().name(), player);
 	}
 
 	/**

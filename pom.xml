@@ -22,6 +22,7 @@
 	      <directory>${basedir}/src/main/resources/</directory>
 	      <includes>
 	        <include>plugin.yml</include>
+	        <include>config.yml</include>
 	      </includes>
 	    </resource>
 	 </resources>
@@ -45,6 +46,7 @@
 	  <groupId>com.intellectualcrafters</groupId>
 	  <artifactId>plotsquared</artifactId>
 	  <version>3.2.27</version>
+	  <scope>provided</scope>
 	</dependency>
     <!-- WorldGuard API -->
     <dependency>
