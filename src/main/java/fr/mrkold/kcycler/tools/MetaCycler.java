@@ -6,7 +6,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import fr.mrkold.kcycler.KCyclerPlugin;
-import fr.mrkold.kcycler.Utils.PluginUtils;
+import fr.mrkold.kcycler.utils.PluginUtils;
 
 @SuppressWarnings("deprecation")
 public class MetaCycler {
@@ -54,7 +54,7 @@ public class MetaCycler {
 		block.setData((byte) (block.getData() - 1));
 		PluginUtils.refreshBlock(block);
 		String name = block.getTypeId() + ":" + block.getData();
-		plugin.setItemInHandName(ChatColor.GREEN, name, player);
+		plugin.getPluginUtils().setItemInHandName(ChatColor.GREEN, name, player);
 	}
 
 	/**
@@ -67,7 +67,7 @@ public class MetaCycler {
 		block.setData((byte) (block.getData() + 1));
 		PluginUtils.refreshBlock(block);
 		String name = block.getTypeId() + ":" + block.getData();
-		plugin.setItemInHandName(ChatColor.GREEN, name, player);
+		plugin.getPluginUtils().setItemInHandName(ChatColor.GREEN, name, player);
 	}
 
 	/**
@@ -84,7 +84,7 @@ public class MetaCycler {
 		plugin.getPluginConfig().set(playerName + ".meta", metadata);
 		PluginUtils.saveData(plugin);
 		String name = materialId.toString() + ":" + metadata;
-		plugin.setItemInHandName(ChatColor.GOLD, name, player);
+		plugin.getPluginUtils().setItemInHandName(ChatColor.GOLD, name, player);
 	}
 
 	/**
