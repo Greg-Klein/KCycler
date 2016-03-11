@@ -13,7 +13,8 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.mcstats.Metrics;
 
-import fr.mrkold.kcycler.listeners.EventListener;
+import fr.mrkold.kcycler.listeners.PlayerEventListener;
+import fr.mrkold.kcycler.listeners.WorldEventListener;
 import fr.mrkold.kcycler.tools.BiomeCycler;
 import fr.mrkold.kcycler.tools.MetaCycler;
 import fr.mrkold.kcycler.tools.PaintCycler;
@@ -143,10 +144,10 @@ public class KCyclerPlugin extends JavaPlugin implements Listener {
 		}
 
 		/**
-		 * Register event listener
+		 * Register event listeners
 		 */
-		EventListener eventListener = new EventListener(this);
-		Bukkit.getServer().getPluginManager().registerEvents(eventListener, this);
+		Bukkit.getServer().getPluginManager().registerEvents(new PlayerEventListener(this), this);
+		Bukkit.getServer().getPluginManager().registerEvents(new WorldEventListener(this), this);
 
 		/**
 		 * Check for new version
