@@ -5,7 +5,7 @@ import java.util.List;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.plugin.Plugin;
 
-public class NoGravity {
+public class GravityUtils {
 
 	/**
 	 * Cancel gravity for a list of blocks defined in configuration file

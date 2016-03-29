@@ -30,6 +30,10 @@ public class PermissionsUtils {
 	}
 
 	public boolean canUseAt(Player player, Location location) {
+		if (player.isOp()) {
+			return true;
+		}
+
 		/**
 		 * Return true if player has admin permission
 		 */

@@ -1,6 +1,5 @@
 package fr.mrkold.kcycler.listeners;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.bukkit.ChatColor;
@@ -14,10 +13,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockFromToEvent;
-import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.LeavesDecayEvent;
 import org.bukkit.event.inventory.InventoryCreativeEvent;
 import org.bukkit.event.painting.PaintingBreakByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -30,11 +26,10 @@ import fr.mrkold.kcycler.KCyclerPlugin;
 import fr.mrkold.kcycler.tools.BiomeCycler;
 import fr.mrkold.kcycler.tools.MetaCycler;
 import fr.mrkold.kcycler.tools.PaintCycler;
-import fr.mrkold.kcycler.utils.NoGravity;
 import fr.mrkold.kcycler.utils.PermissionsUtils;
 
 @SuppressWarnings("deprecation")
-public class EventListener implements Listener {
+public class PlayerEventListener implements Listener {
 
 	private KCyclerPlugin plugin;
 	private PermissionsUtils permsUtils;
@@ -43,7 +38,7 @@ public class EventListener implements Listener {
 	private PaintCycler paintCycler;
 	private List<Integer> cyclerBlacklist;
 
-	public EventListener(KCyclerPlugin plugin) {
+	public PlayerEventListener(KCyclerPlugin plugin) {
 		this.plugin = plugin;
 		permsUtils = new PermissionsUtils(plugin);
 		biomeCycler = plugin.getBiomeCycler();
@@ -274,40 +269,4 @@ public class EventListener implements Listener {
 			// Ne rien faire
 		}
 	}
-
-	/**
-	 * Cancel leaves decay
-	 * 
-	 * @param LeavesDecayEvent
-	 */
-	@EventHandler
-	public void onLeavesDecay(LeavesDecayEvent event) {
-		boolean leavesDecay = plugin.getConfig().getBoolean("prevent-leaves-decay");
-		event.setCancelled(leavesDecay);
-	}
-
-	/**
-	 * Cancel gravity
-	 * 
-	 * @param BlockPhysicsEvent
-	 */
-	@EventHandler
-	public void onCheckGravity(BlockPhysicsEvent event) {
-		NoGravity.cancelGravity(plugin, event);
-	}
-
-	/**
-	 * Prevent Enderdragon egg to teleport when clicked and torch/web to break
-	 * under water
-	 * 
-	 * @param BlockFromToEvent
-	 */
-	@EventHandler
-	public void onBlockChange(BlockFromToEvent event) {
-		List<Material> blockList = Arrays.asList(Material.TORCH, Material.WEB, Material.DRAGON_EGG);
-		if (blockList.contains(event.getBlock().getType())) {
-			event.setCancelled(true);
-		}
-	}
-
 }

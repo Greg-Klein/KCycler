@@ -11,6 +11,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import fr.mrkold.kcycler.KCyclerPlugin;
+import fr.mrkold.kcycler.dao.ConfigDao;
 import fr.mrkold.kcycler.utils.PluginUtils;
 
 @SuppressWarnings("deprecation")
@@ -19,6 +20,7 @@ public class BiomeCycler {
 	public final static Material DEFAULT_BIOMECYCLER_MATERIAL = Material.BLAZE_ROD;
 
 	private KCyclerPlugin plugin;
+	private ConfigDao configDao;
 	private Material material;
 	private List<Biome> biomes = Arrays.asList(Biome.values());
 	private int maxBiome = biomes.size() - 1;
@@ -45,6 +47,7 @@ public class BiomeCycler {
 	public BiomeCycler(KCyclerPlugin plugin) {
 		this.plugin = plugin;
 		this.material = DEFAULT_BIOMECYCLER_MATERIAL;
+		this.configDao = plugin.getConfigDao();
 		Integer biomeTool = plugin.getConfig().getInt("biome-tool");
 		if (biomeTool != 0) {
 			material = Material.getMaterial(biomeTool);
@@ -136,8 +139,8 @@ public class BiomeCycler {
 	public void copyBiome(Player player, Block block) {
 		String playerName = player.getName();
 		String biomeName = block.getBiome().name();
-		plugin.getPluginConfig().set(playerName + ".biome", biomeName);
-		PluginUtils.saveData(plugin);
+		configDao.getPluginConfig().set(playerName + ".biome", biomeName);
+		configDao.saveData();
 		plugin.getPluginUtils().setItemInHandName(ChatColor.GOLD, block.getBiome().name(), player);
 	}
 
@@ -149,7 +152,7 @@ public class BiomeCycler {
 	 */
 	public void pasteBiome(Player player, Block block) {
 		String playerName = player.getName();
-		String storedBiome = plugin.getPluginConfig().getString(playerName + ".biome");
+		String storedBiome = configDao.getPluginConfig().getString(playerName + ".biome");
 		if (storedBiome == null || storedBiome.isEmpty()) {
 			player.sendMessage(ChatColor.RED + "Copy a biome first");
 		} else {

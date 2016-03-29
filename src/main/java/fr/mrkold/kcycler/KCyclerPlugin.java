@@ -1,33 +1,26 @@
 package fr.mrkold.kcycler;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.mcstats.Metrics;
 
-import fr.mrkold.kcycler.listeners.EventListener;
+import fr.mrkold.kcycler.dao.ConfigDao;
+import fr.mrkold.kcycler.listeners.PlayerEventListener;
+import fr.mrkold.kcycler.listeners.WorldEventListener;
 import fr.mrkold.kcycler.tools.BiomeCycler;
 import fr.mrkold.kcycler.tools.MetaCycler;
 import fr.mrkold.kcycler.tools.PaintCycler;
 import fr.mrkold.kcycler.utils.PluginUtils;
 import update.checker.UpdateChecker;
 
-@SuppressWarnings("deprecation")
 public class KCyclerPlugin extends JavaPlugin implements Listener {
 
-	public final static String DATA_FILE_NAME = "data.yml";
-
-	private File dataFile;
-	private FileConfiguration pluginConfig;
 	private PluginUtils pluginUtils;
+	private ConfigDao configDao;
 	private String updateMessage;
 	private BiomeCycler biomeCycler;
 	private MetaCycler metaCycler;
@@ -36,17 +29,12 @@ public class KCyclerPlugin extends JavaPlugin implements Listener {
 	/**
 	 * Getters & Setters
 	 */
-
-	public File getDataFile() {
-		return dataFile;
-	}
-
-	public FileConfiguration getPluginConfig() {
-		return pluginConfig;
-	}
-
 	public PluginUtils getPluginUtils() {
 		return pluginUtils;
+	}
+
+	public ConfigDao getConfigDao() {
+		return configDao;
 	}
 
 	public String getUpdateMessage() {
@@ -83,6 +71,13 @@ public class KCyclerPlugin extends JavaPlugin implements Listener {
 		}
 
 		/**
+		 * Config
+		 */
+		configDao = new ConfigDao(this);
+		configDao.copyDefault();
+		configDao.createMaterialList();
+
+		/**
 		 * Tools
 		 */
 		biomeCycler = new BiomeCycler(this);
@@ -103,50 +98,10 @@ public class KCyclerPlugin extends JavaPlugin implements Listener {
 		getCommand(CommandManager.PLAYERHEAD_COMMAND).setExecutor(commandHandler);
 
 		/**
-		 * Create config
+		 * Register event listeners
 		 */
-		this.getConfig().options().copyDefaults(true);
-		this.saveConfig();
-
-		/**
-		 * Create and load data file
-		 */
-		dataFile = new File(getDataFolder(), DATA_FILE_NAME);
-		if (!dataFile.exists()) {
-			try {
-				dataFile.createNewFile();
-			} catch (IOException e) {
-				getLogger().warning("Failed to write data file");
-				e.printStackTrace();
-			}
-		}
-		pluginConfig = YamlConfiguration.loadConfiguration(dataFile);
-
-		/**
-		 * Create blocks list file
-		 */
-		File materialList = new File(getDataFolder(), "Material_List.txt");
-		if (!materialList.exists()) {
-			Material[] materials = Material.class.getEnumConstants();
-			try {
-				FileWriter fileWriter = new FileWriter(materialList);
-				fileWriter.write("NAME - ID\n----------\n");
-				for (Material material : materials) {
-					fileWriter.write(material.toString() + " - " + material.getId() + "\n");
-				}
-				fileWriter.close();
-				materialList.createNewFile();
-			} catch (IOException e) {
-				getLogger().warning("Failed to write material list file");
-				e.printStackTrace();
-			}
-		}
-
-		/**
-		 * Register event listener
-		 */
-		EventListener eventListener = new EventListener(this);
-		Bukkit.getServer().getPluginManager().registerEvents(eventListener, this);
+		Bukkit.getServer().getPluginManager().registerEvents(new PlayerEventListener(this), this);
+		Bukkit.getServer().getPluginManager().registerEvents(new WorldEventListener(this), this);
 
 		/**
 		 * Check for new version
