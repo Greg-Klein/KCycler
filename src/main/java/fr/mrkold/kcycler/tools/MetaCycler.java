@@ -6,6 +6,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import fr.mrkold.kcycler.KCyclerPlugin;
+import fr.mrkold.kcycler.dao.ConfigDao;
 import fr.mrkold.kcycler.utils.PluginUtils;
 
 @SuppressWarnings("deprecation")
@@ -14,6 +15,7 @@ public class MetaCycler {
 	public final static Material DEFAULT_METACYCLER_MATERIAL = Material.STICK;
 
 	private KCyclerPlugin plugin;
+	private ConfigDao configDao;
 	private Material material;
 
 	/**
@@ -38,6 +40,7 @@ public class MetaCycler {
 	public MetaCycler(KCyclerPlugin plugin) {
 		this.plugin = plugin;
 		this.material = DEFAULT_METACYCLER_MATERIAL;
+		configDao = plugin.getConfigDao();
 		Integer metaTool = plugin.getConfig().getInt("meta-tool");
 		if (metaTool != 0) {
 			material = Material.getMaterial(metaTool);
@@ -80,9 +83,9 @@ public class MetaCycler {
 		String playerName = player.getName();
 		byte metadata = block.getData();
 		Integer materialId = block.getTypeId();
-		plugin.getPluginConfig().set(playerName + ".block", materialId);
-		plugin.getPluginConfig().set(playerName + ".meta", metadata);
-		PluginUtils.saveData(plugin);
+		configDao.getPluginConfig().set(playerName + ".block", materialId);
+		configDao.getPluginConfig().set(playerName + ".meta", metadata);
+		configDao.saveData();
 		String name = materialId.toString() + ":" + metadata;
 		plugin.getPluginUtils().setItemInHandName(ChatColor.GOLD, name, player);
 	}
@@ -95,8 +98,8 @@ public class MetaCycler {
 	 */
 	public void pasteMeta(Player player, Block block) {
 		String playerName = player.getName();
-		Integer materialId = plugin.getPluginConfig().getInt(playerName + ".block");
-		Integer metadataInteger = plugin.getPluginConfig().getInt(playerName + ".meta");
+		Integer materialId = configDao.getPluginConfig().getInt(playerName + ".block");
+		Integer metadataInteger = configDao.getPluginConfig().getInt(playerName + ".meta");
 		if (materialId == 0) {
 			player.sendMessage(ChatColor.RED + "Copy a block first");
 		} else {

@@ -11,7 +11,7 @@ import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.LeavesDecayEvent;
 
 import fr.mrkold.kcycler.KCyclerPlugin;
-import fr.mrkold.kcycler.utils.NoGravity;
+import fr.mrkold.kcycler.utils.GravityUtils;
 
 public class WorldEventListener implements Listener {
 
@@ -39,7 +39,7 @@ public class WorldEventListener implements Listener {
 	 */
 	@EventHandler
 	public void onCheckGravity(BlockPhysicsEvent event) {
-		NoGravity.cancelGravity(plugin, event);
+		GravityUtils.cancelGravity(plugin, event);
 	}
 
 	/**

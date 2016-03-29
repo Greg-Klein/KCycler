@@ -1,7 +1,5 @@
 package fr.mrkold.kcycler.utils;
 
-import java.io.IOException;
-
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Sound;
@@ -29,6 +27,9 @@ public class PluginUtils {
 
 	private KCyclerPlugin plugin;
 
+	/**
+	 * Constructor
+	 */
 	public PluginUtils(KCyclerPlugin plugin) {
 		this.plugin = plugin;
 	}
@@ -59,17 +60,6 @@ public class PluginUtils {
 			api = new PlotAPI();
 		}
 		return api;
-	}
-
-	/**
-	 * Save data to file
-	 */
-	public static void saveData(KCyclerPlugin plugin) {
-		try {
-			plugin.getPluginConfig().save(plugin.getDataFile());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	/**
