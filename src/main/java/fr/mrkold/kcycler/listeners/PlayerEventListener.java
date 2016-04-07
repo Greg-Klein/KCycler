@@ -23,9 +23,9 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 
 import fr.mrkold.kcycler.KCyclerPlugin;
-import fr.mrkold.kcycler.tools.BiomeCycler;
-import fr.mrkold.kcycler.tools.MetaCycler;
-import fr.mrkold.kcycler.tools.PaintCycler;
+import fr.mrkold.kcycler.tools.BiomeTool;
+import fr.mrkold.kcycler.tools.MetaTool;
+import fr.mrkold.kcycler.tools.Tool;
 import fr.mrkold.kcycler.utils.PermissionsUtils;
 
 @SuppressWarnings("deprecation")
@@ -33,17 +33,11 @@ public class PlayerEventListener implements Listener {
 
 	private KCyclerPlugin plugin;
 	private PermissionsUtils permsUtils;
-	private BiomeCycler biomeCycler;
-	private MetaCycler metaCycler;
-	private PaintCycler paintCycler;
 	private List<Integer> cyclerBlacklist;
 
 	public PlayerEventListener(KCyclerPlugin plugin) {
 		this.plugin = plugin;
 		permsUtils = new PermissionsUtils(plugin);
-		biomeCycler = plugin.getBiomeCycler();
-		metaCycler = plugin.getMetaCycler();
-		paintCycler = plugin.getPaintCycler();
 
 		/**
 		 * Initialize blacklist and add double plant to it
@@ -84,70 +78,55 @@ public class PlayerEventListener implements Listener {
 			 * Check 3rd party plugins permissions
 			 */
 			if (permsUtils.canUseAt(player, block.getLocation())) {
+				Tool toolInHand = null;
+				if (event.getPlayer().getItemInHand().getType() == BiomeTool.BIOMETOOL_MATERIAL) {
+					toolInHand = plugin.getBiomeTool();
+				} else if (event.getPlayer().getItemInHand().getType() == MetaTool.METATOOL_MATERIAL) {
+					toolInHand = plugin.getMetaTool();
+				}
 				if (player.isSneaking()) {
 					/**
 					 * Copy
 					 */
-					if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-						if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
-							biomeCycler.copyBiome(player, block);
-							event.setCancelled(true);
+					if (event.getAction() == Action.LEFT_CLICK_BLOCK && toolInHand != null) {
+						if (toolInHand instanceof MetaTool && !cyclerBlacklist.contains(block.getTypeId())) {
+							toolInHand.copy(player, block);
+						} else {
+							toolInHand.copy(player, block);
 						}
-						if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
-							if (!cyclerBlacklist.contains(block.getTypeId())) {
-								metaCycler.copyMeta(player, block);
-							}
-							event.setCancelled(true);
-						}
+						event.setCancelled(true);
 					}
 					/**
 					 * Paste
 					 */
-					if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-						if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
-							biomeCycler.pasteBiome(player, block);
-							event.setCancelled(true);
-						}
-						if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
-							metaCycler.pasteMeta(player, block);
-							event.setCancelled(true);
-						}
+					if (event.getAction() == Action.RIGHT_CLICK_BLOCK && toolInHand != null) {
+						toolInHand.paste(player, block);
+						event.setCancelled(true);
 					}
 				} else {
 					/**
 					 * Cycling
 					 */
-					if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-						if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
-							biomeCycler.rightClickBlock(player, block);
-							event.setCancelled(true);
+					if (event.getAction() == Action.RIGHT_CLICK_BLOCK && toolInHand != null) {
+						if (toolInHand instanceof MetaTool && !cyclerBlacklist.contains(block.getTypeId())) {
+							toolInHand.next(player, block);
+						} else {
+							toolInHand.next(player, block);
 						}
-						if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
-							if (!cyclerBlacklist.contains(block.getTypeId())) {
-								metaCycler.rightClickBlock(player, block);
-							}
-							event.setCancelled(true);
-						}
+						event.setCancelled(true);
 					}
 					/**
-					 * Cycling (reverse)
+					 * Reverse Cycling
 					 */
-					if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
-						if (event.getPlayer().getItemInHand().getType() == biomeCycler.getMaterial()) {
-							biomeCycler.leftClickBlock(player, block);
-							event.setCancelled(true);
-						}
-						if (event.getPlayer().getItemInHand().getType() == metaCycler.getMaterial()) {
-							if (!cyclerBlacklist.contains(block.getTypeId())) {
-								metaCycler.leftClickBlock(player, block);
-							}
-							event.setCancelled(true);
-						}
+					if (event.getAction() == Action.LEFT_CLICK_BLOCK && toolInHand != null) {
+						toolInHand.previous(player, block);
+						event.setCancelled(true);
 					}
 				}
 			} else if (player.hasPermission(PermissionsUtils.USE_PERMISSION)) {
-				// If player has use permission but no permission to use KCycler
-				// here
+				/**
+				 * If player has use permission but no permission to use KCycler
+				 */
 				player.sendMessage(ChatColor.RED + "You don't have permission to do this here");
 			}
 		}
@@ -163,7 +142,7 @@ public class PlayerEventListener implements Listener {
 		Player player = event.getPlayer();
 		if (player.hasPermission(PermissionsUtils.USE_PERMISSION)) {
 			ItemStack itemInHand = event.getPlayer().getItemInHand();
-			if (itemInHand.getType() == metaCycler.getMaterial()) {
+			if (itemInHand.getType() == MetaTool.METATOOL_MATERIAL) {
 				Block block = event.getPlayer().getTargetBlock(null, 10);
 				int blockId = block.getTypeId();
 				if (blockId != 0) {
@@ -185,11 +164,12 @@ public class PlayerEventListener implements Listener {
 		Player player = event.getPlayer();
 		Painting clickedPainting = (Painting) event.getRightClicked();
 		Location paintingLocation = clickedPainting.getLocation();
+
 		if (permsUtils.canUseAt(player, paintingLocation)) {
-			if (clickedPainting.getType() == EntityType.PAINTING) {
-				if (player.getItemInHand().getType() == metaCycler.getMaterial()) {
-					paintCycler.rightClick(clickedPainting);
-				}
+			if ((clickedPainting.getType() == EntityType.PAINTING)
+					&& (player.getItemInHand().getType() == MetaTool.METATOOL_MATERIAL)) {
+				plugin.getMetaTool().nextPainting(clickedPainting);
+				event.setCancelled(true);
 			}
 		}
 	}
@@ -204,9 +184,10 @@ public class PlayerEventListener implements Listener {
 		Player player = (Player) event.getRemover();
 		Painting clickedPainting = event.getPainting();
 		Location paintingLocation = clickedPainting.getLocation();
+
 		if (permsUtils.canUseAt(player, paintingLocation)) {
-			if (player.getItemInHand().getType() == metaCycler.getMaterial()) {
-				paintCycler.leftClick(clickedPainting);
+			if (player.getItemInHand().getType() == MetaTool.METATOOL_MATERIAL) {
+				plugin.getMetaTool().previousPainting(clickedPainting);
 				event.setCancelled(true);
 			}
 		}
@@ -266,7 +247,7 @@ public class PlayerEventListener implements Listener {
 				event.getBlockPlaced().setData(metadata);
 			}
 		} catch (Exception exception) {
-			// Ne rien faire
+			// Do Nothing
 		}
 	}
 }

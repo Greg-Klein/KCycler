@@ -15,6 +15,8 @@ import com.intellectualcrafters.plot.api.PlotAPI;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 
 import fr.mrkold.kcycler.KCyclerPlugin;
+import fr.mrkold.kcycler.tools.BiomeTool;
+import fr.mrkold.kcycler.tools.MetaTool;
 
 @SuppressWarnings("deprecation")
 public class PluginUtils {
@@ -88,7 +90,7 @@ public class PluginUtils {
 	 * @param player
 	 */
 	public void giveBiomeTool(Player player) {
-		player.setItemInHand(new ItemStack(plugin.getBiomeCycler().getMaterial(), 1));
+		player.setItemInHand(new ItemStack(BiomeTool.BIOMETOOL_MATERIAL, 1));
 		player.playSound(player.getLocation(), Sound.ORB_PICKUP, 1, 1);
 	}
 
@@ -98,7 +100,7 @@ public class PluginUtils {
 	 * @param player
 	 */
 	public void giveMetaTool(Player player) {
-		player.setItemInHand(new ItemStack(plugin.getMetaCycler().getMaterial(), 1));
+		player.setItemInHand(new ItemStack(MetaTool.METATOOL_MATERIAL, 1));
 		player.playSound(player.getLocation(), Sound.ORB_PICKUP, 1, 1);
 	}
 

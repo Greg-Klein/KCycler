@@ -11,9 +11,9 @@ import org.mcstats.Metrics;
 import fr.mrkold.kcycler.dao.ConfigDao;
 import fr.mrkold.kcycler.listeners.PlayerEventListener;
 import fr.mrkold.kcycler.listeners.WorldEventListener;
-import fr.mrkold.kcycler.tools.BiomeCycler;
-import fr.mrkold.kcycler.tools.MetaCycler;
-import fr.mrkold.kcycler.tools.PaintCycler;
+import fr.mrkold.kcycler.tools.BiomeTool;
+import fr.mrkold.kcycler.tools.MetaTool;
+import fr.mrkold.kcycler.tools.Tool;
 import fr.mrkold.kcycler.utils.PluginUtils;
 import update.checker.UpdateChecker;
 
@@ -22,9 +22,8 @@ public class KCyclerPlugin extends JavaPlugin implements Listener {
 	private PluginUtils pluginUtils;
 	private ConfigDao configDao;
 	private String updateMessage;
-	private BiomeCycler biomeCycler;
-	private MetaCycler metaCycler;
-	private PaintCycler paintCycler;
+	private Tool biomeTool;
+	private Tool metaTool;
 
 	/**
 	 * Getters & Setters
@@ -41,16 +40,12 @@ public class KCyclerPlugin extends JavaPlugin implements Listener {
 		return updateMessage;
 	}
 
-	public BiomeCycler getBiomeCycler() {
-		return biomeCycler;
+	public BiomeTool getBiomeTool() {
+		return (BiomeTool) biomeTool;
 	}
 
-	public MetaCycler getMetaCycler() {
-		return metaCycler;
-	}
-
-	public PaintCycler getPaintCycler() {
-		return paintCycler;
+	public MetaTool getMetaTool() {
+		return (MetaTool) metaTool;
 	}
 
 	/**
@@ -80,9 +75,8 @@ public class KCyclerPlugin extends JavaPlugin implements Listener {
 		/**
 		 * Tools
 		 */
-		biomeCycler = new BiomeCycler(this);
-		metaCycler = new MetaCycler(this);
-		paintCycler = new PaintCycler();
+		biomeTool = new BiomeTool(this);
+		metaTool = new MetaTool(this);
 
 		/**
 		 * Utils
